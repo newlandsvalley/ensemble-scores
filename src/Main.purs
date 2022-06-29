@@ -10,6 +10,7 @@ import VexFlow.Types (Config, RenderingError, defaultConfig)
 import Data.Abc.Parser (parse)
 import Data.Abc (AbcTune)
 import Abc.EnsembleScore.Renderer
+import Debug (spy)
 
 config :: Config
 config =
@@ -22,7 +23,9 @@ main =
     Right abcTune -> do
       renderer <- initialiseCanvas config
       renderPolyphonicTune config renderer abcTune
-    _ ->
+    Left e -> do 
+      let 
+        _ = spy "render error" e
       pure $ Just "ABC failed to parse"
 
 oneBar :: String 

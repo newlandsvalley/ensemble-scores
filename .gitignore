@@ -1,8 +1,8 @@
-/bower_components/
 /node_modules/
 /.pulp-cache/
 /output/
 /generated-docs/
+/dist/app.js
 /deprecated/
 /.psc-package/
 /.psc*

@@ -14,9 +14,10 @@ import Data.Either (Either)
 import Data.Foldable (maximumBy)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
-import Data.Traversable (traverse)
-import VexFlow.Types (BarSpec, MonophonicScore, StaveSpec, staveIndentation, staveSeparation, titleDepth)
+import Data.Traversable (traverse, sequenceDefault)
+import VexFlow.Types (BarSpec, MonophonicScore, StaveSpec)
 
+import Debug (spy)
 
 -- Associate all the voices of an individual bar of music 
 -- and then provide a line of these that represent one stave line of associated bars
@@ -26,12 +27,12 @@ type MergedStaveLine = Array (Array BarSpec)
 type Translation a = ExceptT String (State EnsembleContext) a
 
 runBuildEnsembleScore :: Array MonophonicScore -> Either String EnsembleScore 
-runBuildEnsembleScore staveSpecs =
+runBuildEnsembleScore staveSpecs = 
   unwrap $ evalStateT (runExceptT $ buildEnsembleScore staveSpecs) { nextStaveNo : 0 }
 
 buildEnsembleScore :: Array MonophonicScore -> Translation EnsembleScore 
 buildEnsembleScore staveSpecs =
-  traverse buildMultiStaveSpec staveSpecs 
+  traverse buildMultiStaveSpec (sequenceDefault staveSpecs)
 
 mergeVoiceLines :: Array StaveSpec -> Translation MergedStaveLine
 mergeVoiceLines [s1, s2] = 
@@ -88,13 +89,13 @@ buildMultiStaveLine mergedStaveLine =
   f acc barSpecs = 
     let  
       nextXOffset = 
-        case head barSpecs of 
+        case head acc of 
           Nothing -> 
             0 
           Just bs ->
-            bs.width + bs.xOffset 
+            bs.positioning.width + bs.positioning.xOffset 
     in 
-      (buildMultiStaveBarSpec nextXOffset barSpecs) : acc
+      (buildMultiStaveBarSpec nextXOffset barSpecs) : acc      
 
 -- build a complete multi-stave spec
 buildMultiStaveSpec :: Array StaveSpec -> Translation MultiStaveSpec
@@ -103,19 +104,16 @@ buildMultiStaveSpec ss = do
   let 
     multiStaveLine = buildMultiStaveLine mergedVoiceLines
 
-  -- multiStaveVoices :: Array MultiStaveVoice 
-  multiStaveVoices <- traverse f ss
-  pure { multiStaveVoices, multiStaveLine}
+  staveStarts <- traverse f ss
+  pure { staveStarts, multiStaveLine}
 
   where 
-    f :: StaveSpec -> Translation MultiStaveVoice 
+    f :: StaveSpec -> Translation StaveStart 
     f s = do       
       ensembleContext <- get
       _ <- put ensembleContext { nextStaveNo = ensembleContext.nextStaveNo + 1 }
 
       pure { staveNo : ensembleContext.nextStaveNo
-           , initialxOffset : staveIndentation
-           , initialyOffset : (staveSeparation * ensembleContext.nextStaveNo) + titleDepth
            , keySignature : s.keySignature
            , isNewTimeSignature : s.isNewTimeSignature
            , mTempo : s.mTempo

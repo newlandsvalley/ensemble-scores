@@ -35,10 +35,8 @@ type MultiStaveBarSpec =
 -- | a line of such bar specs
 type MultiStaveLine = Array MultiStaveBarSpec
 
-type MultiStaveVoice = 
+type StaveStart = 
   { staveNo :: Int 
-  , initialxOffset :: Int
-  , initialyOffset :: Int
   , keySignature :: KeySignature
   , isNewTimeSignature :: Boolean 
   , mTempo :: Maybe Tempo
@@ -47,11 +45,15 @@ type MultiStaveVoice =
 
 -- a line of a score with multiple staves for each part
 type MultiStaveSpec =
-  { multiStaveVoices :: Array MultiStaveVoice
+  { staveStarts :: Array StaveStart
   , multiStaveLine :: MultiStaveLine
   }
 
-type EnsembleScore = Array MultiStaveSpec
+type EnsembleScore = Array MultiStaveSpec 
 
 type EnsembleContext = 
   { nextStaveNo :: Int }
+
+-- staves must be indented further to allow for a stave connector
+multiStaveIndentation :: Int 
+multiStaveIndentation = 40
