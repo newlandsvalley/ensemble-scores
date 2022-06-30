@@ -8,8 +8,8 @@ import Prelude
 import Control.Monad.Except.Trans (ExceptT, runExceptT, throwError)
 
 import Control.Monad.State (State, evalStateT, get, put)
-import Abc.EnsembleScore.Types 
-import Data.Array ((:), head, foldl, reverse, singleton, zipWith)
+import Abc.EnsembleScore.Types
+import Data.Array ((:), head, foldl, last, reverse, singleton, zipWith)
 import Data.Either (Either)
 import Data.Foldable (maximumBy)
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -97,15 +97,23 @@ buildMultiStaveLine mergedStaveLine =
     in 
       (buildMultiStaveBarSpec nextXOffset barSpecs) : acc      
 
+calculateStaveLineWidth :: MultiStaveLine -> Int 
+calculateStaveLineWidth multiStaveLine = 
+  case (last multiStaveLine) of 
+    Nothing -> 
+      0
+    Just msBarSpec ->
+      msBarSpec.positioning.width + msBarSpec.positioning.xOffset
+
 -- build a complete multi-stave spec
 buildMultiStaveSpec :: Array StaveSpec -> Translation MultiStaveSpec
 buildMultiStaveSpec ss = do
   mergedVoiceLines <- mergeVoiceLines ss
   let 
     multiStaveLine = buildMultiStaveLine mergedVoiceLines
-
+    staveWidth = calculateStaveLineWidth multiStaveLine
   staveStarts <- traverse f ss
-  pure { staveStarts, multiStaveLine}
+  pure { staveWidth, staveStarts, multiStaveLine}
 
   where 
     f :: StaveSpec -> Translation StaveStart 

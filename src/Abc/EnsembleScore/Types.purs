@@ -3,12 +3,12 @@ module Abc.EnsembleScore.Types where
 import Prelude
 import Data.Abc (BarLine, KeySignature)
 import Data.Maybe (Maybe)
-import VexFlow.Abc.Slur (SlurBracket, VexCurve)
+import VexFlow.Abc.Slur (VexCurve)
 import VexFlow.Types (BarSpec, BeamSpec, LineThickness, MusicSpec, Tempo, TimeSignature)
 import VexFlow.Abc.Volta (VexVolta)
 
 -- | Positioning of the stave bar. This is an aspect of a bar common to each voice
--- | note we have to regulate them to a common values
+-- | note we have to regulate them to common values across the voices
 type Positioning =
   { width  :: Int
   , xOffset :: Int
@@ -45,7 +45,8 @@ type StaveStart =
 
 -- a line of a score with multiple staves for each part
 type MultiStaveSpec =
-  { staveStarts :: Array StaveStart
+  { staveWidth :: Int
+  , staveStarts :: Array StaveStart
   , multiStaveLine :: MultiStaveLine
   }
 

@@ -3,6 +3,7 @@ module Abc.EnsembleScore.Renderer where
 import Prelude
 
 import Abc.EnsembleScore.Generator (buildEnsembleScore, runBuildEnsembleScore)
+import Abc.EnsembleScore.Alignment (rightJustify)
 import Abc.EnsembleScore.Types 
 import Data.Abc (AbcTune)
 import Data.Abc.Voice (partitionVoices)
@@ -41,10 +42,12 @@ renderPolyphonicTune config renderer tune = do
           case (runBuildEnsembleScore voiceScores) of
             Right ensembleScore -> do
               _ <- init
-              _ <- renderScore renderer ensembleScore
+              _ <- renderScore renderer 
+                     (rightJustify config.width config.scale ensembleScore)
               pure Nothing
             Left e ->
               pure (Just e)
+
         Left e -> 
           pure (Just e)
 
@@ -64,8 +67,6 @@ renderLine renderer staveStarts line =
 
 renderMultiBar :: Renderer -> Array StaveStart -> Int -> MultiStaveBarSpec -> Effect Unit 
 renderMultiBar renderer staveStarts barNo multiBar = do
-  let 
-    _ = spy "rendering multibar" barNo
   staves <- traverseWithIndex 
               (makeStaveBar staveStarts multiBar.positioning barNo) 
               multiBar.voices
@@ -81,6 +82,7 @@ makeStaveBar staveStarts positioning barNo voiceNo barSpec = do
     staveStart = unsafePartial $ fromJust $ index staveStarts voiceNo
     config = staveConfig staveStart.staveNo barNo positioning barSpec 
     _ = spy "positioning" positioning
+    _ = spy "stave config" config
   newStave config staveStart.clefString staveStart.keySignature
 
 populateBarVoices :: Renderer -> Array Stave -> Array VoiceBarSpec -> Effect Unit
