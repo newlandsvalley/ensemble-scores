@@ -9,12 +9,12 @@ import Control.Monad.Except.Trans (ExceptT, runExceptT, throwError)
 
 import Control.Monad.State (State, evalStateT, get, put)
 import Abc.EnsembleScore.Types
-import Data.Array ((:), head, foldl, last, reverse, singleton, zipWith)
+import Data.Array ((:), head, filter, foldl, last, length, mapMaybe, null, reverse, singleton, tail, zipWith)
 import Data.Either (Either)
 import Data.Foldable (maximumBy)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Newtype (unwrap)
-import Data.Traversable (traverse, sequenceDefault)
+import Data.Traversable (traverse)
 import VexFlow.Types (BarSpec, MonophonicScore, StaveSpec)
 
 import Debug (spy)
@@ -32,7 +32,7 @@ runBuildEnsembleScore staveSpecs =
 
 buildEnsembleScore :: Array MonophonicScore -> Translation EnsembleScore 
 buildEnsembleScore staveSpecs =
-  traverse buildMultiStaveSpec (sequenceDefault staveSpecs)
+  traverse buildMultiStaveSpec (transposeVoiceScores staveSpecs)
 
 mergeVoiceLines :: Array StaveSpec -> Translation MergedStaveLine
 mergeVoiceLines [s1, s2] = 
@@ -42,8 +42,9 @@ mergeVoiceLines [s1, s2, s3] =
 mergeVoiceLines [s1, s2, s3, s4] = 
   pure $ mergeFurtherVoiceLine s1.barSpecs (mergeFurtherVoiceLine s2.barSpecs
     (merge2VoiceLines s3.barSpecs s4.barSpecs))
-mergeVoiceLines _ =
-  throwError "This module only supports polyphony with between 2 and 4 voices"
+mergeVoiceLines x =
+  throwError ("This module only supports polyphony with between 2 and 4 voices - we got: "
+                <> (show $ length x))
 
 merge2VoiceLines :: Array BarSpec -> Array BarSpec -> MergedStaveLine
 merge2VoiceLines  a1 a2 = 
@@ -106,6 +107,7 @@ calculateStaveLineWidth multiStaveLine =
       msBarSpec.positioning.width + msBarSpec.positioning.xOffset
 
 -- build a complete multi-stave spec
+
 buildMultiStaveSpec :: Array StaveSpec -> Translation MultiStaveSpec
 buildMultiStaveSpec ss = do
   mergedVoiceLines <- mergeVoiceLines ss
@@ -129,6 +131,22 @@ buildMultiStaveSpec ss = do
            }
 
 
+-- | transpose an Array of score staves - voices of lines
+-- | to a similar Array of score staves - lines of voices
+transposeVoiceScores ::  Array (Array StaveSpec) -> Array (Array StaveSpec)
+transposeVoiceScores = 
+   filter (not null) <<< transpose
+
+-- | generalised Array transpose 
+-- | not too sure about this algorithm.  It can produce embedded arrays that are null
+transpose :: forall a. Array (Array a) -> Array (Array a)
+transpose [[]] = [[]]
+transpose [[a]] = [[a]]
+transpose x = 
+  if (isNothing $ head x)
+    then [] 
+  else
+    (mapMaybe head x) : transpose (mapMaybe tail x)  
 
 
    

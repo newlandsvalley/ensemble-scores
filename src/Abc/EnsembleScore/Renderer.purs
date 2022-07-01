@@ -2,7 +2,7 @@ module Abc.EnsembleScore.Renderer where
 
 import Prelude
 
-import Abc.EnsembleScore.Generator (buildEnsembleScore, runBuildEnsembleScore)
+import Abc.EnsembleScore.Generator (runBuildEnsembleScore)
 import Abc.EnsembleScore.Alignment (rightJustify)
 import Abc.EnsembleScore.Types 
 import Data.Abc (AbcTune)
@@ -18,9 +18,10 @@ import Partial.Unsafe (unsafePartial)
 import VexFlow.Score (Renderer, Stave, createScore)
 import VexFlow.Abc.Slur (VexCurves)
 import VexFlow.ApiBindings (newStave, renderStave)
-import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, StaveSpec, staveIndentation, staveSeparation, titleDepth)
+import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, staveSeparation, titleDepth)
 
 import Debug (spy)
+
 
 -- | a stave connector
 foreign import data StaveConnector :: Type
@@ -45,10 +46,14 @@ renderPolyphonicTune config renderer tune = do
               _ <- renderScore renderer 
                      (rightJustify config.width config.scale ensembleScore)
               pure Nothing
-            Left e ->
+            Left e -> do
+              let 
+                _ = spy "build ensemble score error" e
               pure (Just e)
 
-        Left e -> 
+        Left e -> do
+          let 
+            _ = spy "build voices error" e
           pure (Just e)
 
 renderScore :: Renderer -> EnsembleScore -> Effect Unit 
@@ -109,6 +114,7 @@ staveConfig staveNo barNo positioning barSpec =
   , hasRightBar: (barSpec.endLineThickness /= NoLine)
   , hasDoubleRightBar: (barSpec.endLineThickness == Double)
   }  
+
 
 foreign import init :: Effect Unit
 foreign import drawStaveConnector :: Renderer -> Array Stave -> Effect Unit
