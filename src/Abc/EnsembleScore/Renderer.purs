@@ -16,6 +16,7 @@ import Data.TraversableWithIndex (traverseWithIndex)
 import Data.FoldableWithIndex (traverseWithIndex_)
 import Partial.Unsafe (unsafePartial)
 import VexFlow.Score (Renderer, Stave, createScore)
+import VexFlow.Abc.Alignment (removeStaveExtensions)
 import VexFlow.Abc.Slur (VexCurves)
 import VexFlow.ApiBindings (newStave, renderStave)
 import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, staveSeparation, titleDepth)
@@ -36,7 +37,7 @@ renderPolyphonicTune config renderer tune = do
   else 
     let 
       eVoiceScores :: Either String (Array MonophonicScore)
-      eVoiceScores = sequenceDefault $ map (createScore config) voices
+      eVoiceScores = sequenceDefault $ map (createScore config) voices      
     in
       case eVoiceScores of 
         Right voiceScores -> 
@@ -86,8 +87,8 @@ makeStaveBar staveStarts positioning barNo voiceNo barSpec = do
   let 
     staveStart = unsafePartial $ fromJust $ index staveStarts voiceNo
     config = staveConfig staveStart.staveNo barNo positioning barSpec 
-    _ = spy "positioning" positioning
-    _ = spy "stave config" config
+    -- _ = spy "positioning" positioning
+    -- _ = spy "stave config" config
   newStave config staveStart.clefString staveStart.keySignature
 
 populateBarVoices :: Renderer -> Array Stave -> Array VoiceBarSpec -> Effect Unit

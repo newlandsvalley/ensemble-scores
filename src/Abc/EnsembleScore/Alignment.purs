@@ -1,7 +1,6 @@
 module Abc.EnsembleScore.Alignment
   ( centeredTitleXPos
   , justifiedScoreConfig
-  , removeStaveExtensionsFromLine
   , rightJustify
   )
   where
@@ -20,13 +19,15 @@ module Abc.EnsembleScore.Alignment
 import Abc.EnsembleScore.Types
 
 import Control.Monad.State (State, evalStateT, get, put)
-import Data.Array (length, singleton, takeWhile)
+import Data.Array (length, singleton)
 import Data.Foldable (foldl, foldM)
 import Data.Int (floor, toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
-import Prelude (bind, map, max, mempty, min, pure, ($), (*), (+), (-), (/), (<>), (>=), (/=))
-import VexFlow.Types (Config, LineThickness(..), scoreMarginBottom, staveSeparation, titleDepth)
+import Prelude (bind, map, max, mempty, min, pure, ($), (*), (+), (-), (/), (<>), (>=))
+import VexFlow.Types (Config, scoreMarginBottom, staveSeparation, titleDepth)
+
+import Debug (spy)
 
 type Alignment a = State Int a
 
@@ -60,12 +61,14 @@ justifiedScoreConfig score config =
 alignStaves :: Int -> Number -> Array MultiStaveSpec -> Array MultiStaveSpec
 alignStaves maxCanvasWidth scale multiStaves =
   let
-    newStaves = map removeStaveExtensions multiStaves
     maxWidth = maxStaveWidth maxCanvasWidth scale
-    alignmentWidth = alignmentStaveWidth maxWidth newStaves
+    alignmentWidth = alignmentStaveWidth maxWidth multiStaves
+    _ = spy "maxWidth" maxWidth 
+    _ = spy "alignmentWidth" alignmentWidth
     mapf staveSpec =
       let
         maybeFactor = incrementFactor alignmentWidth staveSpec.staveWidth
+        _ = spy "next unaligned stave width" staveSpec.staveWidth
       in
         case maybeFactor of
           Just n ->
@@ -73,34 +76,7 @@ alignStaves maxCanvasWidth scale multiStaves =
           _ ->
             staveSpec
   in
-    map mapf newStaves
-
-
-removeStaveExtensions :: MultiStaveSpec -> MultiStaveSpec
-removeStaveExtensions msSpec = 
-  msSpec { multiStaveLine = newLine}
-
-  where
-  newLine = removeStaveExtensionsFromLine msSpec.multiStaveLine
-
-removeStaveExtensionsFromLine :: MultiStaveLine -> MultiStaveLine
-removeStaveExtensionsFromLine msLine =  
-  map removeStaveExtensionsFromMSBarSpec msLine
-
-removeStaveExtensionsFromMSBarSpec :: MultiStaveBarSpec -> MultiStaveBarSpec
-removeStaveExtensionsFromMSBarSpec msBarSpec = 
-  { positioning: msBarSpec.positioning 
-  , voices
-  }
-
-  where 
-  voices = removeStaveExtensionFromVoice msBarSpec.voices 
-
--- | remove the empty stave bar extension that may occur at the end of a multi-stave's voice
-removeStaveExtensionFromVoice :: Array VoiceBarSpec -> Array VoiceBarSpec 
-removeStaveExtensionFromVoice voice =
-  -- drop the last bar if it has no end line marker
-  takeWhile (\bs -> bs.endLineThickness /= NoLine) voice
+    map mapf multiStaves
 
 -- | find the widest stave
 -- | (if any stave is greater than the maximum width then this max is taken as the
@@ -112,13 +88,12 @@ alignmentStaveWidth maxWidth mss =
   where 
   staveWidthf :: Int -> MultiStaveSpec -> Int
   staveWidthf acc multiStaveSpec =
-    min maxWidth (max acc multiStaveSpec.staveWidth)
-  
+    min maxWidth (max acc multiStaveSpec.staveWidth)  
 
 -- | find the increase required to grow each bar in a stave so that
 -- | it reaches the required alignment width
 incrementFactor :: Int -> Int -> Maybe Number
-incrementFactor alignmentWidth staveWidth =
+incrementFactor alignmentWidth staveWidth =  
   if (staveWidth >= alignmentWidth) then
     Nothing
   else
@@ -161,7 +136,7 @@ growPositioning enlargement barSpec =
       xOffset <- get
       _ <- put $ xOffset + width
       pure $ 
-        { xOffset
+        { xOffset: xOffset - multiStaveIndentation
         , width
         }
 

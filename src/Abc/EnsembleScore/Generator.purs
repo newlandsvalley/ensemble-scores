@@ -16,6 +16,7 @@ import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Data.Newtype (unwrap)
 import Data.Traversable (traverse)
 import VexFlow.Types (BarSpec, MonophonicScore, StaveSpec)
+import VexFlow.Abc.Alignment (removeStaveExtensions)
 
 import Debug (spy)
 
@@ -31,8 +32,11 @@ runBuildEnsembleScore staveSpecs =
   unwrap $ evalStateT (runExceptT $ buildEnsembleScore staveSpecs) { nextStaveNo : 0 }
 
 buildEnsembleScore :: Array MonophonicScore -> Translation EnsembleScore 
-buildEnsembleScore staveSpecs =
-  traverse buildMultiStaveSpec (transposeVoiceScores staveSpecs)
+buildEnsembleScore staveSpecs = 
+  traverse buildMultiStaveSpec (transposeVoiceScores etioalatedSpecs)  
+  where
+  -- remove any final empty bar with stave lines extending to the canvas width
+  etioalatedSpecs = map removeStaveExtensions staveSpecs
 
 mergeVoiceLines :: Array StaveSpec -> Translation MergedStaveLine
 mergeVoiceLines [s1, s2] = 
@@ -104,7 +108,10 @@ calculateStaveLineWidth multiStaveLine =
     Nothing -> 
       0
     Just msBarSpec ->
-      msBarSpec.positioning.width + msBarSpec.positioning.xOffset
+      let 
+        _ = spy "stave line" multiStaveLine 
+      in 
+        msBarSpec.positioning.width + msBarSpec.positioning.xOffset
 
 -- build a complete multi-stave spec
 
