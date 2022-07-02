@@ -18,7 +18,7 @@ import Partial.Unsafe (unsafePartial)
 import VexFlow.Score (Renderer, Stave, createScore)
 import VexFlow.Abc.Alignment (removeStaveExtensions)
 import VexFlow.Abc.Slur (VexCurves)
-import VexFlow.ApiBindings (newStave, renderStave)
+import VexFlow.ApiBindings (newStave, renderStave, addTimeSignature)
 import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, staveSeparation, titleDepth)
 
 import Debug (spy)
@@ -89,7 +89,10 @@ makeStaveBar staveStarts positioning barNo voiceNo barSpec = do
     config = staveConfig staveStart.staveNo barNo positioning barSpec 
     -- _ = spy "positioning" positioning
     -- _ = spy "stave config" config
-  newStave config staveStart.clefString staveStart.keySignature
+  stave <- newStave config staveStart.clefString staveStart.keySignature
+  when ((staveStart.isNewTimeSignature) && (barNo == 0)) do
+    addTimeSignature stave barSpec.timeSignature
+  pure stave
 
 populateBarVoices :: Renderer -> Array Stave -> Array VoiceBarSpec -> Effect Unit
 populateBarVoices renderer staves voiceBars = 
@@ -103,7 +106,13 @@ populateBarVoice renderer staves staveNo voiceBar = do
   when (not $ null musicSpec.noteSpecs) do
     renderBarContents renderer stave voiceBar.beamSpecs voiceBar.curves musicSpec
   pure unit  
-  
+
+{-}
+renderTimeSignature :: Array StaveStart -> Array Stave -> VoiceBarSpec -> Effect Unit
+renderTimeSignature  staveStart voiceBar =
+  when (staveStart.isNewTimeSignature)
+    addTimeSignature staveBar voiceBar.timeSignature
+-}
 
 staveConfig :: Int -> Int -> Positioning -> VoiceBarSpec -> StaveConfig
 staveConfig staveNo barNo positioning barSpec =
