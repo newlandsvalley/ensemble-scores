@@ -9,7 +9,6 @@ I am expecting this to be a fairly slow process.  It involves a fair bit of tedi
 ## To do
 
   * Add the tune title 
-  * Add the rest of the score markings (voltas, time signatures, anotations etc.)
   * Return an error if the parts are mismatched
   * Work out the best scaling factor
   * Try to find out what to do to align individual notes within a multi-bar

@@ -18,7 +18,7 @@ import Partial.Unsafe (unsafePartial)
 import VexFlow.Score (Renderer, Stave, createScore)
 import VexFlow.Abc.Alignment (removeStaveExtensions)
 import VexFlow.Abc.Slur (VexCurves)
-import VexFlow.ApiBindings (newStave, renderStave, addTempoMarking, addTimeSignature)
+import VexFlow.ApiBindings (newStave, renderStave, addTempoMarking, addTimeSignature, displayContextChange, processBarBeginRepeat, processBarEndRepeat, processVolta)
 import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, staveSeparation, titleDepth)
 
 import Debug (spy)
@@ -87,13 +87,19 @@ makeStaveBar staveStarts positioning barNo voiceNo barSpec = do
   let 
     staveStart = unsafePartial $ fromJust $ index staveStarts voiceNo
     config = staveConfig staveStart.staveNo barNo positioning barSpec 
+    (MusicSpec musicSpec) = barSpec.musicSpec
     -- _ = spy "positioning" positioning
     -- _ = spy "stave config" config
   stave <- newStave config staveStart.clefString staveStart.keySignature
+
+  traverse_ (displayContextChange stave) musicSpec.contextChanges
   when ((staveStart.isNewTimeSignature) && (barNo == 0)) do
     addTimeSignature stave barSpec.timeSignature
   when ((barNo == 0) && (staveStart.staveNo == 0)) do
     addTempoMarking stave staveStart.mTempo
+  _ <- processBarBeginRepeat stave barSpec.startLine
+  _ <- processBarEndRepeat stave barSpec.endLineRepeat
+  _ <- processVolta stave barSpec.volta
   pure stave
 
 populateBarVoices :: Renderer -> Array Stave -> Array VoiceBarSpec -> Effect Unit
