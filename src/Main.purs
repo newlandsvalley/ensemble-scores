@@ -48,6 +48,7 @@ serra =
   <> "R:polska\r\n"
   <> "M:3/4\r\n"
   <> "L:1/8\r\n"
+  <> "Q:1/4=120\r\n"
   <> "K:C\r\n"
   <> "V:1\r\n"
   <> "|:e2 fedc|a2a4|g2 agfe|f2 gfed|efe2c2:|\r\n"

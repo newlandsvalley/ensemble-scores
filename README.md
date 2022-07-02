@@ -8,7 +8,7 @@ I am expecting this to be a fairly slow process.  It involves a fair bit of tedi
 
 ## To do
 
-  * Complete alignment algorithm for staves and bars
+  * Add the tune title 
   * Add the rest of the score markings (voltas, time signatures, anotations etc.)
   * Return an error if the parts are mismatched
   * Work out the best scaling factor
