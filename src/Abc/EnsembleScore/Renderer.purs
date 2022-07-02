@@ -3,12 +3,14 @@ module Abc.EnsembleScore.Renderer where
 import Prelude
 
 import Abc.EnsembleScore.Generator (runBuildEnsembleScore)
-import Abc.EnsembleScore.Alignment (rightJustify)
+import Abc.EnsembleScore.Alignment (rightJustify, justifiedScoreConfig)
 import Abc.EnsembleScore.Types 
 import Data.Abc (AbcTune)
+import Data.Abc.Metadata (getTitle)
 import Data.Abc.Voice (partitionVoices)
 import Data.Array (index, length, null)
-import Data.Maybe (Maybe(..), fromJust)
+import Data.Maybe (Maybe(..), fromJust, fromMaybe)
+import Data.String (length) as String
 import Effect (Effect)
 import Data.Either (Either(..))
 import Data.Traversable (sequenceDefault, traverse, traverse_)
@@ -16,9 +18,9 @@ import Data.TraversableWithIndex (traverseWithIndex)
 import Data.FoldableWithIndex (traverseWithIndex_)
 import Partial.Unsafe (unsafePartial)
 import VexFlow.Score (Renderer, Stave, createScore)
-import VexFlow.Abc.Alignment (removeStaveExtensions)
 import VexFlow.Abc.Slur (VexCurves)
-import VexFlow.ApiBindings (newStave, renderStave, addTempoMarking, addTimeSignature, displayContextChange, processBarBeginRepeat, processBarEndRepeat, processVolta)
+import VexFlow.Abc.Alignment (centeredTitleXPos)
+import VexFlow.ApiBindings (newStave, renderStave, addTempoMarking, addTimeSignature, displayContextChange, processBarBeginRepeat, processBarEndRepeat, processVolta, renderTuneTitle)
 import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, staveSeparation, titleDepth)
 
 import Debug (spy)
@@ -32,6 +34,7 @@ renderPolyphonicTune config renderer tune = do
   let 
     voices = partitionVoices tune 
     _ = spy "renderPolyphonicTune voice count" (length voices)
+    title = fromMaybe "untitled" $ getTitle tune
   if (length voices <= 1) then     
     pure (Just "There are not multiple voicea in the tune")
   else 
@@ -43,9 +46,14 @@ renderPolyphonicTune config renderer tune = do
         Right voiceScores -> 
           case (runBuildEnsembleScore voiceScores) of
             Right ensembleScore -> do
+              let 
+                 -- justify the score on the right-hand side
+                 score = rightJustify config.width config.scale ensembleScore
+                 -- recalculate the config dimensions now on the justified score
+                 config' = justifiedScoreConfig score config
               _ <- init
-              _ <- renderScore renderer 
-                     (rightJustify config.width config.scale ensembleScore)
+              _ <- renderTitle config' renderer title
+              _ <- renderScore renderer score                     
               pure Nothing
             Left e -> do
               let 
@@ -59,8 +67,6 @@ renderPolyphonicTune config renderer tune = do
 
 renderScore :: Renderer -> EnsembleScore -> Effect Unit 
 renderScore renderer score = do
-  let 
-    _ = spy "score lines" (length score)
   traverse_ (renderMultiStave renderer) score
 
 renderMultiStave :: Renderer -> MultiStaveSpec -> Effect Unit
@@ -115,13 +121,6 @@ populateBarVoice renderer staves staveNo voiceBar = do
     renderBarContents renderer stave voiceBar.beamSpecs voiceBar.curves musicSpec
   pure unit  
 
-{-}
-renderTimeSignature :: Array StaveStart -> Array Stave -> VoiceBarSpec -> Effect Unit
-renderTimeSignature  staveStart voiceBar =
-  when (staveStart.isNewTimeSignature)
-    addTimeSignature staveBar voiceBar.timeSignature
--}
-
 staveConfig :: Int -> Int -> Positioning -> VoiceBarSpec -> StaveConfig
 staveConfig staveNo barNo positioning barSpec =
   { x: positioning.xOffset + multiStaveIndentation
@@ -133,6 +132,15 @@ staveConfig staveNo barNo positioning barSpec =
   , hasDoubleRightBar: (barSpec.endLineThickness == Double)
   }  
 
+renderTitle :: Config -> Renderer -> String -> Effect Unit
+renderTitle config renderer title = do
+  let
+    yPos :: Int
+    yPos = div (titleDepth * 3) 4
+
+    xPos :: Int
+    xPos = centeredTitleXPos config (String.length title)
+  renderTuneTitle renderer title xPos yPos
 
 foreign import init :: Effect Unit
 foreign import drawStaveConnector :: Renderer -> Array Stave -> Effect Unit
