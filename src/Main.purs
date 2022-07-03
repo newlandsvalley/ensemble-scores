@@ -15,11 +15,11 @@ import Debug (spy)
 config :: Config
 config =
   defaultConfig 
-    { width = 1200 }
+    { width = 1500 }
 
 main :: Effect (Maybe String)
 main =
-  case (parse serra) of
+  case (parse peckets) of
     Right abcTune -> do
       renderer <- initialiseCanvas config
       renderPolyphonicTune config renderer abcTune
@@ -59,4 +59,20 @@ serra =
   <> "M:3/4\r\n"
   <> "|:C2C4|G,2 GABG|A2^F4|G,2GFED|C2A,4|B,2G,4|C2C,4:|\r\n"
 
-
+peckets :: String 
+peckets =
+     "X:1\r\n"
+  <> "T:Pecket's Hornpipe\r\n"
+  <> "L:1/8\r\n"
+  <> "M:3/2\r\n"
+  <> "R:Triple Hornpipe\r\n"
+  <> "K:D\r\n"
+  <> "V:1 clef=treble\r\n"
+  <> "gfed cdec d2 D2 | FGAF E2 e2 c4   | BAGB AGFA d2 F2| GFED A,2 C2 D4 :|\r\n"
+  <> "|: FAFD FAFD C2 E2 | GBGE GBGE  F2 A2| egec dfdB cecA | gfed Adce  d4 :|]\r\n"
+  <> "V:2 clef=treble\r\n"
+  <> "E2 E2 A2 c2 d4 | D2 F2 G2 B2 A4 | G2 G2 A2 F2 D4 | C2 D2 E2 E2 D4 :|\r\n"
+  <> "|: F2 F4 D2 C2 E2 | G2 G4 E2 D2 F2 | B2 c2 A2 B2 G2 A2 | C2 D2 E2 E2 D4 :|\r\n"
+  <> "V:3 clef=bass\r\n"
+  <> "A,,2 A,,4 A,,2 D,C,B,,A,, | D,,2 D,,4 A,,2 C,D,E,F, | G,2 G,4 F,2 D,E,F,G, | A,2 A,4 A,2 D,4 :|\r\n"
+  <> "|: D,,2 D,,4 D,,2 A,,2 A,,2 | |E,2 E,4 E,2 D,2 F,2 | G,2 A,2 F,2 G,2 E,2 A,2 | A,2 A,4 A,2 D,4 :|\r\n"
