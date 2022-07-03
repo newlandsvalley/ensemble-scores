@@ -77,6 +77,7 @@ buildVoiceBarSpec bs =
   { startLine : bs.startLine
   , endLineThickness : bs.endLineThickness
   , endLineRepeat : bs.endLineRepeat
+  , isFull : bs.isFull
   , volta : bs.volta
   , timeSignature : bs.timeSignature
   , beamSpecs : bs.beamSpecs
