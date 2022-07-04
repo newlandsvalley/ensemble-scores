@@ -1,4 +1,7 @@
-module Abc.EnsembleScore.Renderer where
+module Abc.EnsembleScore.Renderer
+  ( renderPolyphonicTune 
+  , renderPolyphonicVoices
+  ) where
 
 import Prelude
 
@@ -29,12 +32,19 @@ import Debug (spy)
 -- | a stave connector
 foreign import data StaveConnector :: Type
 
+-- | render a polyphonic tune as an ensemble score where the tune contains 
+-- | separate voice parts
 renderPolyphonicTune :: Config -> Renderer -> AbcTune -> Effect (Maybe String)
 renderPolyphonicTune config renderer tune = do
   let 
     voices = partitionVoices tune 
     _ = spy "renderPolyphonicTune voice count" (length voices)
     title = fromMaybe "untitled" $ getTitle tune
+  renderPolyphonicVoices config renderer title voices
+
+-- | render a polyphonic tune as an ensemble score presented as an array of voices
+renderPolyphonicVoices :: Config -> Renderer -> String -> Array AbcTune -> Effect (Maybe String)
+renderPolyphonicVoices config renderer title voices = do
   if (length voices <= 1) then     
     pure (Just "There are not multiple voicea in the tune")
   else 
