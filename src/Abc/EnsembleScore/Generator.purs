@@ -9,12 +9,13 @@ import Control.Monad.Except.Trans (ExceptT, runExceptT, throwError)
 
 import Control.Monad.State (State, evalStateT, get, put)
 import Abc.EnsembleScore.Types
-import Data.Array ((:), head, filter, foldl, last, length, mapMaybe, null, reverse, singleton, tail, zipWith)
+import Data.Array ((:), head, filter, foldl, index, last, length, mapMaybe, null, reverse, singleton, tail, zipWith)
 import Data.Either (Either)
 import Data.Foldable (maximumBy)
-import Data.Maybe (Maybe(..), fromMaybe, isNothing)
+import Data.Maybe (Maybe(..), fromJust, fromMaybe, isNothing)
 import Data.Newtype (unwrap)
 import Data.Traversable (traverse)
+import Partial.Unsafe (unsafePartial)
 import VexFlow.Types (BarSpec, MonophonicScore, StaveSpec)
 import VexFlow.Abc.Alignment (removeStaveExtensions)
 
@@ -109,10 +110,7 @@ calculateStaveLineWidth multiStaveLine =
     Nothing -> 
       0
     Just msBarSpec ->
-      let 
-        _ = spy "stave line" multiStaveLine 
-      in 
-        msBarSpec.positioning.width + msBarSpec.positioning.xOffset
+      msBarSpec.positioning.width + msBarSpec.positioning.xOffset
 
 -- build a complete multi-stave spec
 
@@ -133,10 +131,12 @@ buildMultiStaveSpec ss = do
 
       pure { staveNo : ensembleContext.nextStaveNo
            , keySignature : s.keySignature
-           , isNewTimeSignature : s.isNewTimeSignature
+           , isNewTimeSignature : firstVoiceStaveSpec.isNewTimeSignature -- we must inherit from voice 0
            , mTempo : s.mTempo
            , clefString : s.clefString
-           }
+           }  
+
+    firstVoiceStaveSpec = unsafePartial $ fromJust $ index ss 0
 
 
 -- | transpose an Array of score staves - voices of lines
