@@ -17,7 +17,7 @@ import Data.Traversable (sequenceDefault, traverse, traverse_)
 import Data.TraversableWithIndex (traverseWithIndex)
 import Data.FoldableWithIndex (traverseWithIndex_)
 import Partial.Unsafe (unsafePartial)
-import VexFlow.Score (Renderer, Stave, createScore)
+import VexFlow.Score (Renderer, Stave, createScore, resizeCanvas)
 import VexFlow.Abc.Slur (VexCurves)
 import VexFlow.Abc.Alignment (centeredTitleXPos)
 import VexFlow.ApiBindings (newStave, renderStave, addTempoMarking, addTimeSignature, displayContextChange, processBarBeginRepeat, processBarEndRepeat, processVolta, renderTuneTitle)
@@ -51,6 +51,7 @@ renderPolyphonicTune config renderer tune = do
                  score = rightJustify config.width config.scale ensembleScore
                  -- recalculate the config dimensions now on the justified score
                  config' = justifiedScoreConfig score config
+              _ <- resizeCanvas renderer config'
               _ <- init
               _ <- renderTitle config' renderer title
               _ <- renderScore renderer score                     

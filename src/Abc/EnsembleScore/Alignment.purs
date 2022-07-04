@@ -19,11 +19,12 @@ module Abc.EnsembleScore.Alignment
 import Abc.EnsembleScore.Types
 
 import Control.Monad.State (State, evalStateT, get, put)
-import Data.Array (length, singleton)
+import Data.Array (head, length, singleton)
 import Data.Foldable (foldl, foldM)
 import Data.Int (floor, toNumber)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromJust)
 import Data.Newtype (unwrap)
+import Partial.Unsafe (unsafePartial)
 import Prelude (bind, map, max, mempty, min, pure, ($), (*), (+), (-), (/), (<>), (>=))
 import VexFlow.Types (Config, scoreMarginBottom, staveSeparation, titleDepth)
 
@@ -157,7 +158,9 @@ justifiedScoreCanvasWidth scale staves =
 justifiedScoreCanvasHeight :: Number -> Boolean -> Array MultiStaveSpec -> Int
 justifiedScoreCanvasHeight scale titled staves =
   let
-    staveCount = length staves
+    firstStave = unsafePartial $ fromJust $ head staves
+    voiceCount = length firstStave.staveStarts
+    staveCount = length staves * voiceCount
     -- we'll assume if we have just one stave, then it's a thumbnail
     -- and we want to minimise the dimensions
     marginBottom =
