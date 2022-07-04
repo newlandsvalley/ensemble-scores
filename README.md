@@ -6,9 +6,20 @@ This is an attempt to produces an ensemble score from an ABC notation tune conta
 
 I am expecting this to be a fairly slow process.  It involves a fair bit of tedious reconstruction of the data to associate the bars together that are returned from abc-scores.
 
+## To build the library
+
+```
+   spago build
+```
+
+## To build the example
+
+```
+   npm run example
+```
+
 ## To do
 
   * Return an error if the parts are mismatched
   * Work out the best scaling factor
   * Try to find out what to do to align individual notes within a multi-bar
-  * Convert to a library and add examples

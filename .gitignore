@@ -3,6 +3,7 @@
 /output/
 /generated-docs/
 /dist/app.js
+/example/dist/app.js
 /deprecated/
 /.psc-package/
 /.psc*
