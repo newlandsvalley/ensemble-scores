@@ -3,23 +3,21 @@ module Abc.EnsembleScore.Generator
   , runBuildEnsembleScore
   ) where
 
+import Abc.EnsembleScore.Types
 import Prelude
 
 import Control.Monad.Except.Trans (ExceptT, runExceptT, throwError)
-
 import Control.Monad.State (State, evalStateT, get, put)
-import Abc.EnsembleScore.Types
-import Data.Array ((:), head, filter, foldl, index, last, length, mapMaybe, null, reverse, singleton, tail, zipWith)
+import Data.Array ((:), all, head, filter, foldl, index, last, length, mapMaybe, null, reverse, singleton, tail, zipWith)
 import Data.Either (Either)
 import Data.Foldable (maximumBy)
 import Data.Maybe (Maybe(..), fromJust, fromMaybe, isNothing)
 import Data.Newtype (unwrap)
 import Data.Traversable (traverse)
+import Data.TraversableWithIndex (traverseWithIndex)
 import Partial.Unsafe (unsafePartial)
-import VexFlow.Types (BarSpec, MonophonicScore, StaveSpec)
 import VexFlow.Abc.Alignment (removeStaveExtensions)
-
-import Debug (spy)
+import VexFlow.Types (BarSpec, MonophonicScore, StaveSpec)
 
 -- Associate all the voices of an individual bar of music 
 -- and then provide a line of these that represent one stave line of associated bars
@@ -34,20 +32,23 @@ runBuildEnsembleScore staveSpecs =
 
 buildEnsembleScore :: Array MonophonicScore -> Translation EnsembleScore 
 buildEnsembleScore staveSpecs = 
-  traverse buildMultiStaveSpec (transposeVoiceScores etioalatedSpecs)  
+  traverseWithIndex buildMultiStaveSpec (transposeVoiceScores etioalatedSpecs)  
   where
   -- remove any final empty bar with stave lines extending to the canvas width
   etioalatedSpecs = map removeStaveExtensions staveSpecs
 
-mergeVoiceLines :: Array StaveSpec -> Translation MergedStaveLine
-mergeVoiceLines [s1, s2] = 
+mergeVoiceLines :: Int -> Array StaveSpec -> Translation MergedStaveLine
+mergeVoiceLines staveLineNo [s1, s2] = do
+  _ <- checkCompatibleStaves staveLineNo [s1, s2]
   pure $ merge2VoiceLines s1.barSpecs s2.barSpecs
-mergeVoiceLines [s1, s2, s3] = 
+mergeVoiceLines staveLineNo [s1, s2, s3] = do
+  _ <- checkCompatibleStaves staveLineNo [s1, s2, s3]
   pure $ mergeFurtherVoiceLine s1.barSpecs (merge2VoiceLines s2.barSpecs s3.barSpecs)
-mergeVoiceLines [s1, s2, s3, s4] = 
+mergeVoiceLines staveLineNo [s1, s2, s3, s4] = do
+  _ <- checkCompatibleStaves staveLineNo [s1, s2, s3, s4]
   pure $ mergeFurtherVoiceLine s1.barSpecs (mergeFurtherVoiceLine s2.barSpecs
     (merge2VoiceLines s3.barSpecs s4.barSpecs))
-mergeVoiceLines x =
+mergeVoiceLines _staveLineNo x =
   throwError ("This module only supports polyphony with between 2 and 4 voices - we got: "
                 <> (show $ length x))
 
@@ -113,10 +114,9 @@ calculateStaveLineWidth multiStaveLine =
       msBarSpec.positioning.width + msBarSpec.positioning.xOffset
 
 -- build a complete multi-stave spec
-
-buildMultiStaveSpec :: Array StaveSpec -> Translation MultiStaveSpec
-buildMultiStaveSpec ss = do
-  mergedVoiceLines <- mergeVoiceLines ss
+buildMultiStaveSpec :: Int -> Array StaveSpec -> Translation MultiStaveSpec
+buildMultiStaveSpec staveLineNo ss = do
+  mergedVoiceLines <- mergeVoiceLines staveLineNo ss
   let 
     multiStaveLine = buildMultiStaveLine mergedVoiceLines
     staveWidth = calculateStaveLineWidth multiStaveLine
@@ -129,12 +129,12 @@ buildMultiStaveSpec ss = do
       ensembleContext <- get
       _ <- put ensembleContext { nextStaveNo = ensembleContext.nextStaveNo + 1 }
 
-      pure { staveNo : ensembleContext.nextStaveNo
-           , keySignature : s.keySignature
-           , isNewTimeSignature : firstVoiceStaveSpec.isNewTimeSignature -- we must inherit from voice 0
-           , mTempo : s.mTempo
-           , clefString : s.clefString
-           }  
+      pure  { staveNo : ensembleContext.nextStaveNo
+            , keySignature : s.keySignature
+            , isNewTimeSignature : firstVoiceStaveSpec.isNewTimeSignature -- we must inherit from voice 0
+            , mTempo : s.mTempo
+            , clefString : s.clefString
+            }  
 
     firstVoiceStaveSpec = unsafePartial $ fromJust $ index ss 0
 
@@ -156,5 +156,21 @@ transpose x =
   else
     (mapMaybe head x) : transpose (mapMaybe tail x)  
 
+checkCompatibleStaves :: Int -> Array StaveSpec -> Translation (Array StaveSpec)
+checkCompatibleStaves multiStaveNo staveSpecs = 
+  if (identicalBarNumbers staveSpecs) then 
+    pure staveSpecs 
+  else 
+    throwError ("Stave " <> show multiStaveNo <> " has incompatible voices")
+
+-- | check that all elements of the inner array are of the same length
+identicalBarNumbers :: Array StaveSpec -> Boolean
+identicalBarNumbers sss = 
+  all (\l -> l == first) lengths
+
+  where 
+  lengths = map (\ss -> length ss.barSpecs) sss
+
+  first = fromMaybe 0 $ head lengths
 
    
