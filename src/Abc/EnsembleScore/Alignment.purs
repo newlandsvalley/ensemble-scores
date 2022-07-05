@@ -161,16 +161,9 @@ justifiedScoreCanvasHeight scale titled staves =
     firstStave = unsafePartial $ fromJust $ head staves
     voiceCount = length firstStave.staveStarts
     staveCount = length staves * voiceCount
-    -- we'll assume if we have just one stave, then it's a thumbnail
-    -- and we want to minimise the dimensions
-    marginBottom =
-      if (1 >= staveCount) then
-        0
-      else
-        scoreMarginBottom
     titleSeparation =
       if titled then titleDepth else 0
-    staveHeight = (staveCount * staveSeparation) + marginBottom + titleSeparation
+    staveHeight = (staveCount * staveSeparation) + scoreMarginBottom + titleSeparation
   in
     floor $ (toNumber staveHeight) * scale
 
