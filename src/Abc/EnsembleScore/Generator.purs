@@ -31,11 +31,12 @@ runBuildEnsembleScore staveSpecs =
   unwrap $ evalStateT (runExceptT $ buildEnsembleScore staveSpecs) { nextStaveNo : 0 }
 
 buildEnsembleScore :: Array MonophonicScore -> Translation EnsembleScore 
-buildEnsembleScore staveSpecs = 
+buildEnsembleScore scores = do 
+  _ <- checkCompatibleScores scores
   traverseWithIndex buildMultiStaveSpec (transposeVoiceScores etioalatedSpecs)  
   where
   -- remove any final empty bar with stave lines extending to the canvas width
-  etioalatedSpecs = map removeStaveExtensions staveSpecs
+  etioalatedSpecs = map removeStaveExtensions scores
 
 mergeVoiceLines :: Int -> Array StaveSpec -> Translation MergedStaveLine
 mergeVoiceLines staveLineNo [s1, s2] = do
@@ -156,21 +157,43 @@ transpose x =
   else
     (mapMaybe head x) : transpose (mapMaybe tail x)  
 
+-- | check that each stave across all voices has an identical number of bars
 checkCompatibleStaves :: Int -> Array StaveSpec -> Translation (Array StaveSpec)
 checkCompatibleStaves multiStaveNo staveSpecs = 
   if (identicalBarNumbers staveSpecs) then 
     pure staveSpecs 
   else 
-    throwError ("Stave " <> show multiStaveNo <> " has incompatible voices")
+    throwError ("Stave " <> show (multiStaveNo + 1) <> " has incompatible voices")
 
--- | check that all elements of the inner array are of the same length
-identicalBarNumbers :: Array StaveSpec -> Boolean
-identicalBarNumbers sss = 
-  all (\l -> l == first) lengths
+  where
 
-  where 
-  lengths = map (\ss -> length ss.barSpecs) sss
+  -- | check that all the bars of a given stave line are of the same length
+  identicalBarNumbers :: Array StaveSpec -> Boolean
+  identicalBarNumbers sss = 
+    all (\l -> l == first) lengths
 
-  first = fromMaybe 0 $ head lengths
+    where 
+    lengths = map (\ss -> length ss.barSpecs) sss
+
+    first = fromMaybe 0 $ head lengths
+
+-- | check that each voice has the same number of staves
+checkCompatibleScores :: Array MonophonicScore -> Translation (Array MonophonicScore)
+checkCompatibleScores scores = 
+  if (identicalStaveCount scores) then 
+    pure scores 
+  else 
+    throwError ("The voices have different numbers of staves")
+
+  where
+
+  identicalStaveCount :: Array MonophonicScore -> Boolean
+  identicalStaveCount ms = 
+    all (\l -> l == first) lengths
+
+    where 
+    lengths = map (\score -> length score) ms
+
+    first = fromMaybe 0 $ head lengths
 
    
