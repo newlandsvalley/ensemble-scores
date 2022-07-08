@@ -2,7 +2,7 @@
 
 This is an attempt to produces an ensemble score from an ABC notation tune containing multiple voices.
 
-[example](https://github.com/newlandsvalley/ensemble-scores/blob/main/peckets.png)
+![example](https://github.com/newlandsvalley/ensemble-scores/blob/main/peckets.png)
 
 Up to now, scores can be created using [purescript-abc-scores](https://github.com/newlandsvalley/purescript-abc-scores) but these are produced as a set of individual scores, one for each part.  What we want is an ensemble score where the staves are joined with connectors and the bars and notes therein are properly aligned.
 
