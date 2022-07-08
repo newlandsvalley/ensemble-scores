@@ -26,9 +26,6 @@ import VexFlow.Abc.Alignment (centeredTitleXPos)
 import VexFlow.ApiBindings (newStave, renderStave, addTempoMarking, addTimeSignature, displayContextChange, processBarBeginRepeat, processBarEndRepeat, processVolta, renderTuneTitle)
 import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, staveSeparation, titleDepth)
 
-import Debug (spy)
-
-
 -- | a stave connector
 foreign import data StaveConnector :: Type
 
@@ -38,7 +35,6 @@ renderPolyphonicTune :: Config -> Renderer -> AbcTune -> Effect (Maybe String)
 renderPolyphonicTune config renderer tune = do
   let 
     voices = partitionVoices tune 
-    _ = spy "renderPolyphonicTune voice count" (length voices)
     title = fromMaybe "untitled" $ getTitle tune
   renderPolyphonicVoices config renderer title voices
 
@@ -66,14 +62,10 @@ renderPolyphonicVoices config renderer title voices = do
               _ <- renderTitle config' renderer title
               _ <- renderScore renderer score                     
               pure Nothing
-            Left e -> do
-              let 
-                _ = spy "build ensemble score error" e
+            Left e -> 
               pure (Just e)
 
-        Left e -> do
-          let 
-            _ = spy "build voices error" e
+        Left e -> 
           pure (Just e)
 
 renderScore :: Renderer -> EnsembleScore -> Effect Unit 

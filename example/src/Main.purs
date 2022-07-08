@@ -6,9 +6,8 @@ import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
 import Effect (Effect)
 import VexFlow.Score (initialiseCanvas)
-import VexFlow.Types (Config, RenderingError, defaultConfig)
+import VexFlow.Types (Config, defaultConfig)
 import Data.Abc.Parser (parse)
-import Data.Abc (AbcTune)
 import Abc.EnsembleScore.Renderer
 import Debug (spy)
 
@@ -19,13 +18,17 @@ config =
 
 main :: Effect (Maybe String)
 main =
-  case (parse peckets) of
+  case (parse basPelles) of
     Right abcTune -> do
       renderer <- initialiseCanvas config
-      renderPolyphonicTune config renderer abcTune
+      result <- renderPolyphonicTune config renderer abcTune
+      let 
+        _ = spy "render error?" result
+      pure result
+        
     Left e -> do 
       let 
-        _ = spy "render error" e
+        _ = spy "parse error" e
       pure $ Just "ABC failed to parse"
 
 oneBar :: String 
@@ -76,3 +79,26 @@ peckets =
   <> "V:3 clef=bass\r\n"
   <> "A,,2 A,,4 A,,2 D,C,B,,A,, | D,,2 D,,4 A,,2 C,D,E,F, | G,2 G,4 F,2 D,E,F,G, | A,2 A,4 A,2 D,4 :|\r\n"
   <> "|: D,,2 D,,4 D,,2 A,,2 A,,2 | |E,2 E,4 E,2 D,2 F,2 | G,2 A,2 F,2 G,2 E,2 A,2 | A,2 A,4 A,2 D,4 :|\r\n"
+
+
+basPelles :: String
+basPelles =
+     "X: 1\r\n"
+  <> "T: Bas-Pelles Eriks Brudpolska\r\n"
+  <> "R: polska\r\n"
+  <> "M: 3/4\r\n"
+  <> "Q: 1/4=115\r\n"
+  <> "L: 1/16\r\n"
+  <> "K: A\r\n" 
+  <> "V: 1\r\n"
+  <> "|: A2c2 c2Bc dcBA | f4 {f}efgf e4 | A2{c}d2 dcBA dcBA | GABc BAGF EDCB, |\r\n"
+  <> " A,3c c2Bc dcBA | f4 {f}efgf e4 | e2ag fedc dcBA |1 GABc B2cB A4 :|2 GABc B2cB A3A |\r\n"
+  <> "|: Acec acec Acec | GBeB gBeB GBeB | DFAF dFAF DFAF | CEAE cEAE CEAE |\r\n"
+  <> "DFAF DFAF ABA2 | CEAE CEAE ABA2 | {B}AGAB cBcd e2A2 | GABc B2cB A3 :|\r\n"
+  <> "V: 2\r\n"
+  <> "|: A2c2 c2Bc dcBA | f4 {f}efgf e4 | A2{c}d2 dcBA dcBA | Bcde dcBA GFED |\r\n"
+  <> " C3c c2Bc dcBA | f4 {f}efgf e4 | A2cB AGFE FEDC |1 B,CDE D2ED C4 :|2 B,CDE D2ED C3 C |\r\n"
+  <> "|: EAcA eAcA EAcA | EGBG eGBG EGBG | A,DFD ADFD A,DFD | A,CEC ACEC  A,CEC |\r\n"
+  <> "A,DFD A,DFD FGF2 | A,CEC A,CEC EFE2 | CB,CD EDEF  A2E2 | B,CDE D2ED C3 :|\r\n"
+
+

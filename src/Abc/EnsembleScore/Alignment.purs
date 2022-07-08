@@ -28,8 +28,6 @@ import Partial.Unsafe (unsafePartial)
 import Prelude (bind, map, max, mempty, min, pure, ($), (*), (+), (-), (/), (<>), (>=))
 import VexFlow.Types (Config, scoreMarginBottom, staveSeparation, titleDepth)
 
-import Debug (spy)
-
 type Alignment a = State Int a
 
 -- | right-justify the core
@@ -64,12 +62,12 @@ alignStaves maxCanvasWidth scale multiStaves =
   let
     maxWidth = maxStaveWidth maxCanvasWidth scale
     alignmentWidth = alignmentStaveWidth maxWidth multiStaves
-    _ = spy "maxWidth" maxWidth 
-    _ = spy "alignmentWidth" alignmentWidth
+    -- _ = spy "maxWidth" maxWidth 
+    -- _ = spy "alignmentWidth" alignmentWidth
     mapf staveSpec =
       let
         maybeFactor = incrementFactor alignmentWidth staveSpec.staveWidth
-        _ = spy "next unaligned stave width" staveSpec.staveWidth
+        -- _ = spy "next unaligned stave width" staveSpec.staveWidth
       in
         case maybeFactor of
           Just n ->

@@ -16,7 +16,6 @@ to generate this file without the comments in this block.
   , "abc-scores"
   , "arrays"
   , "console"
-  , "debug"
   , "effect"
   , "either"
   , "foldable-traversable"
