@@ -14,11 +14,13 @@ import Debug (spy)
 config :: Config
 config =
   defaultConfig 
-    { width = 1500 }
+    { width = 1500
+    , scale = 0.6
+    }
 
 main :: Effect (Maybe String)
 main =
-  case (parse basPelles) of
+  case (parse peckets) of
     Right abcTune -> do
       renderer <- initialiseCanvas config
       result <- renderPolyphonicTune config renderer abcTune
