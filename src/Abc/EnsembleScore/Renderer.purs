@@ -28,6 +28,8 @@ import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, Musi
 
 -- | a stave connector
 foreign import data StaveConnector :: Type
+-- | a voice (the notes on one bar of an individual stave of a multi-stave)
+foreign import data Voice :: Type
 
 -- | render a polyphonic tune as an ensemble score where the tune contains 
 -- | separate voice parts
@@ -111,6 +113,7 @@ makeStaveBar staveStarts positioning barNo voiceNo barSpec = do
   _ <- processVolta stave barSpec.volta
   pure stave
 
+{-
 populateBarVoices :: Renderer -> Array Stave -> Array VoiceBarSpec -> Effect Unit
 populateBarVoices renderer staves voiceBars = 
   traverseWithIndex_ (populateBarVoice renderer staves) voiceBars
@@ -123,6 +126,33 @@ populateBarVoice renderer staves staveNo voiceBar = do
   when (not $ null musicSpec.noteSpecs) do
     renderBarContents renderer stave voiceBar.beamSpecs voiceBar.curves musicSpec
   pure unit  
+-}
+
+
+populateBarVoices :: Renderer -> Array Stave -> Array VoiceBarSpec -> Effect Unit
+populateBarVoices renderer staves voiceBars = do
+  voices <- traverseWithIndex (populateBarVoiceNotes staves) voiceBars
+  _<- renderVoices renderer staves voices 
+  traverseWithIndex_ (populateBarVoiceStructure renderer voices staves) voiceBars
+  
+populateBarVoiceNotes :: Array Stave -> Int -> VoiceBarSpec -> Effect Voice
+populateBarVoiceNotes staves staveNo voiceBar = do
+  let 
+    stave = unsafePartial $ fromJust $ index staves staveNo
+    (MusicSpec musicSpec) = voiceBar.musicSpec
+  -- when (not $ null musicSpec.noteSpecs) do
+  addBarVoice stave musicSpec
+  
+
+populateBarVoiceStructure :: Renderer -> Array Voice -> Array Stave -> Int -> VoiceBarSpec -> Effect Unit
+populateBarVoiceStructure renderer voices staves staveNo voiceBar = do
+  let 
+    stave = unsafePartial $ fromJust $ index staves staveNo
+    voice = unsafePartial $ fromJust $ index voices staveNo
+    (MusicSpec musicSpec) = voiceBar.musicSpec
+  -- when (not $ null musicSpec.noteSpecs) do
+  addBarStructure renderer voice voiceBar.beamSpecs voiceBar.curves musicSpec
+
 
 staveConfig :: Int -> Int -> Positioning -> VoiceBarSpec -> StaveConfig
 staveConfig staveNo barNo positioning barSpec =
@@ -149,5 +179,8 @@ foreign import init :: Effect Unit
 foreign import drawStaveConnector :: Renderer -> Array Stave -> Effect Unit
 -- | display all the contents of the bar, using explicit beaming for the notes
 foreign import renderBarContents :: Renderer -> Stave -> Array BeamSpec -> VexCurves -> MusicSpecContents -> Effect Unit
-
-        
+-- | make a voice from the notes on one bar of a stave 
+foreign import addBarVoice :: Stave -> MusicSpecContents -> Effect Voice
+-- add the bar structure
+foreign import addBarStructure :: Renderer -> Voice -> Array BeamSpec -> VexCurves -> MusicSpecContents -> Effect Unit
+foreign import renderVoices :: Renderer -> Array Stave -> Array Voice -> Effect Unit      

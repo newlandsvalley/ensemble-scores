@@ -35,6 +35,40 @@ var wrapper = function() {
       }
     },
 
+    addBarVoice : function (stave) {
+      return function (musicSpec) {
+        return function () {
+          return wrapper.makeBarVoice(stave, musicSpec);
+        }
+      }
+    },
+
+    addBarStructure : function (renderer) {
+      return function (voice) {
+        return function (beamSpecs) {
+          return function (vexCurves) {
+            return function (musicSpec) {
+              return function () {
+                return wrapper.makeBarStructure(renderer, voice, beamSpecs, vexCurves, musicSpec);
+              }
+            }
+          }
+        }
+      }
+    },
+
+    renderVoices : function (renderer) {
+      return function (staves) {
+        return function (voices) {
+          return function () {
+            return wrapper.formatAndDrawVoices(renderer, staves, voices);
+          }
+        }
+      }
+    },
+
+
+
     /* draw the contents of the bar, using auto-beaming for the notes */
     drawBarContents: function (renderer, stave, beamSpecs, vexCurves, musicSpec) {
       // console.log("drawBarContents")
@@ -63,6 +97,43 @@ var wrapper = function() {
       curves.forEach(function(c) {c.setContext(context).draw()});
     },
 
+
+    /* add the notes and make a voice */
+    makeBarVoice: function (stave, musicSpec) {
+      console.log("makeBarVoice")
+      var notes = musicSpec.noteSpecs.map(wrapper.makeStaveNote);
+
+      /* add repetitions to the stave (coda, segno etc.) */
+      wrapper.addRepetitions (stave, musicSpec.repetitions);
+      /* make a voice */
+      const voice = new VF.Voice().setMode(VF.Voice.Mode.SOFT);
+
+      voice.addTickables(notes);
+      return voice;
+    },
+
+
+    makeBarStructure: function (renderer, voice, beamSpecs, vexCurves, musicSpec) {
+      // console.log("drawBarContents")
+      // console.log(musicSpec);
+      var context = renderer.getContext();
+      var notes = voice.getTickables();
+      var tuplets = musicSpec.tuplets.map(wrapper.makeTupletLayout (notes));
+      var ties = musicSpec.ties.map(wrapper.makeTie (notes));
+      // console.log("beamSpecs");
+      // console.log(beamSpecs);
+      var beams = beamSpecs.map(wrapper.makeBeam (notes));
+      var curves = vexCurves.map(wrapper.makeCurve (notes));
+
+      /* Vex.Flow.Formatter.FormatAndDraw(context, stave, notes); */
+      ties.forEach(function(t) {t.setContext(context).draw()})
+      beams.forEach(function(b) {b.setContext(context).draw()});
+      tuplets.forEach(function(tuplet){
+        tuplet.setContext(context).draw();
+      });
+      curves.forEach(function(c) {c.setContext(context).draw()});
+    },
+
     /*  This formatting appears to be sufficient for our needs.  It attempts to emulate
         the formatting we used successfully with VexFlow 1.2.89.  This went horribly wrong
         for our purposes with VexFlow 3.  The magic softmaxFactor seems to put things right.
@@ -77,9 +148,23 @@ var wrapper = function() {
       
       // Format and justify the notes
       new VF.Formatter({ softmaxFactor: 5 }).joinVoices([voice]).format([voice]).formatToStave([voice], stave);
+  
       
       // Render voice
       voice.draw(context, stave);
+    },
+
+    formatAndDrawVoices: function (renderer, staves, voices) {      
+      var context = renderer.getContext();
+
+      // Format and justify the notes
+      // new VF.Formatter({ softmaxFactor: 5 }).joinVoices(voices).format(voices).formatToStave(voices, stave);
+      // new VF.Formatter({ softmaxFactor: 5 }).joinVoices(voices).format(voices);
+      new VF.Formatter().joinVoices(voices).format(voices);
+      
+      for (let i = 0; i < staves.length; ++i) {
+        voices[i].draw(context, staves[i]);
+        }      
     },
 
 
@@ -222,3 +307,6 @@ var wrapper = function() {
 export var init = wrapper.init;
 export var drawStaveConnector = wrapper.drawStaveConnector;
 export var renderBarContents = wrapper.renderBarContents;
+export var addBarVoice = wrapper.addBarVoice;
+export var addBarStructure = wrapper.addBarStructure;
+export var renderVoices = wrapper.renderVoices;
