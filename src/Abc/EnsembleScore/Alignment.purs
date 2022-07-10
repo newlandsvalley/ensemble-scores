@@ -96,8 +96,7 @@ incrementFactor alignmentWidth staveWidth =
   if (staveWidth >= alignmentWidth) then
     Nothing
   else
-    Just $ (toNumber (alignmentWidth - multiStaveIndentation)) /
-      (toNumber (staveWidth - multiStaveIndentation))
+    Just $ (toNumber alignmentWidth) / (toNumber staveWidth)
 
 -- | grow the stave spec to make the stave fit the alignment width
 growStaveSpec :: Number -> MultiStaveSpec -> MultiStaveSpec

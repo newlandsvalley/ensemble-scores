@@ -103,4 +103,24 @@ basPelles =
   <> "|: EAcA eAcA EAcA | EGBG eGBG EGBG | A,DFD ADFD A,DFD | A,CEC ACEC  A,CEC |\r\n"
   <> "A,DFD A,DFD FGF2 | A,CEC A,CEC EFE2 | CB,CD EDEF  A2E2 | B,CDE D2ED C3 :|\r\n"
 
+carstedt :: String 
+carstedt =
+    "X: 1\r\n"
+ <> "T: Schottis efter Emil Carstedt Gm\r\n"
+ <> "R: Schottis\r\n"
+ <> "M: 4/4\r\n"
+ <> "L: 1/16\r\n"
+ <> "Q: 1/4=70\r\n"
+ <> "K: Gm\r\n"
+ <> "V:1\r\n"
+ <> "D | G>^FGA y B>AFG  AB/A/G>F y G>ABc | d>^cd=e y fecd ef/e/d>c y d>=cBA |\r\n"
+ <> "G>^FGA y B>AFG  AB/A/G>F y G>ABc |1 d>^cd=e y fecd e2d2 d3 :|2 d>^cd=e y fecd e2d2 d4 ||\r\n"
+ <> "|: d>gg<f y d2d2 A>cB<A y G2G2 | D2^FA y d2 y F<A G>AB<c d4 |\r\n"
+ <> "d>gg<f y d2d2 A>cB<A y G2G2 |1 D2^FA y d2 y F<A G2G2 G4 :|2 D2^FA y d2 y F<A G2G2 G3D ||\r\n"
+ <> "V:2\r\n"
+ <> "A | B>ABc y d>cAB c2BA y G>^FGA |B>ABc y d>cAB c2BA y G>^FGA \r\n"
+ <> "B>ABc y d>cAB c2BA y G>^FGA |1 B>ABc y d>cAB c2BA y ^F=EF :|2 B>ABc y d>cAB c2BA y ^F=EFA |\r\n"
+ <> "|: B>dd<B G4 ^F>AA<F E4 | ^F2Ad y f2=ed B>cBA y G2D2 |\r\n"
+ <> "B>dd<B G4 ^F>AA<F E4 |1 ^F2Ad y f2=ed B>cBA G4 :|2 ^F2Ad y f2=ed B>cBA G4 |\r\n"
+
 
