@@ -20,7 +20,7 @@ config =
 
 main :: Effect (Maybe String)
 main =
-  case (parse peckets) of
+  case (parse carstedt) of
     Right abcTune -> do
       renderer <- initialiseCanvas config
       result <- renderPolyphonicTune config renderer abcTune

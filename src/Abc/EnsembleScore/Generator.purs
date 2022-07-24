@@ -8,10 +8,10 @@ import Prelude
 
 import Control.Monad.Except.Trans (ExceptT, runExceptT, throwError)
 import Control.Monad.State (State, evalStateT, get, put)
-import Data.Array ((:), all, head, filter, foldl, index, last, length, mapMaybe, null, reverse, singleton, tail, zipWith)
+import Data.Array ((:), all, head, foldl, index, last, length, mapMaybe, reverse, singleton, tail, zipWith)
 import Data.Either (Either)
 import Data.Foldable (maximumBy)
-import Data.Maybe (Maybe(..), fromJust, fromMaybe, isNothing)
+import Data.Maybe (Maybe(..), fromJust, fromMaybe)
 import Data.Newtype (unwrap)
 import Data.Traversable (traverse)
 import Data.TraversableWithIndex (traverseWithIndex)
@@ -33,7 +33,7 @@ runBuildEnsembleScore staveSpecs =
 buildEnsembleScore :: Array MonophonicScore -> Translation EnsembleScore 
 buildEnsembleScore scores = do 
   _ <- checkCompatibleScores scores
-  traverseWithIndex buildMultiStaveSpec (transposeVoiceScores etioalatedSpecs)  
+  traverseWithIndex buildMultiStaveSpec (transpose etioalatedSpecs)  
   where
   -- remove any final empty bar with stave lines extending to the canvas width
   etioalatedSpecs = map removeStaveExtensions scores
@@ -139,23 +139,16 @@ buildMultiStaveSpec staveLineNo ss = do
 
     firstVoiceStaveSpec = unsafePartial $ fromJust $ index ss 0
 
-
--- | transpose an Array of score staves - voices of lines
--- | to a similar Array of score staves - lines of voices
-transposeVoiceScores ::  Array (Array StaveSpec) -> Array (Array StaveSpec)
-transposeVoiceScores = 
-   filter (not null) <<< transpose
-
 -- | generalised Array transpose 
--- | not too sure about this algorithm.  It can produce embedded arrays that are null
+
 transpose :: forall a. Array (Array a) -> Array (Array a)
-transpose [[]] = [[]]
-transpose [[a]] = [[a]]
+transpose [] = []
 transpose x = 
-  if (isNothing $ head x)
-    then [] 
-  else
-    (mapMaybe head x) : transpose (mapMaybe tail x)  
+  case (mapMaybe head x) of 
+    [] -> 
+      transpose (mapMaybe tail x)
+    start ->       
+      start : transpose (mapMaybe tail x)      
 
 -- | check that each stave across all voices has an identical number of bars
 checkCompatibleStaves :: Int -> Array StaveSpec -> Translation (Array StaveSpec)
