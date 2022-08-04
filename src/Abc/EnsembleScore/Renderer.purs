@@ -11,7 +11,8 @@ import Abc.EnsembleScore.Types
 import Data.Abc (AbcTune)
 import Data.Abc.Metadata (getTitle)
 import Data.Abc.Voice (partitionVoices)
-import Data.Array (index, length, null)
+import Data.Array (index, null)
+import Data.Array.NonEmpty (NonEmptyArray, length)
 import Data.Maybe (Maybe(..), fromJust, fromMaybe)
 import Data.String (length) as String
 import Effect (Effect)
@@ -39,13 +40,13 @@ renderPolyphonicTune config renderer tune = do
   renderPolyphonicVoices config renderer title voices
 
 -- | render a polyphonic tune as an ensemble score presented as an array of voices
-renderPolyphonicVoices :: Config -> Renderer -> String -> Array AbcTune -> Effect (Maybe String)
+renderPolyphonicVoices :: Config -> Renderer -> String -> NonEmptyArray AbcTune -> Effect (Maybe String)
 renderPolyphonicVoices config renderer title voices = do
   if (length voices <= 1) then     
     pure (Just "There are not multiple voicea in the tune")
   else 
     let 
-      eVoiceScores :: Either String (Array MonophonicScore)
+      eVoiceScores :: Either String (NonEmptyArray MonophonicScore)
       eVoiceScores = sequenceDefault $ map (createScore config) voices      
     in
       case eVoiceScores of 

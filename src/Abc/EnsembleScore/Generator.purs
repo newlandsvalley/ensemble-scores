@@ -9,6 +9,8 @@ import Prelude
 import Control.Monad.Except.Trans (ExceptT, runExceptT, throwError)
 import Control.Monad.State (State, evalStateT, get, put)
 import Data.Array ((:), all, head, foldl, index, last, length, mapMaybe, reverse, singleton, tail, zipWith)
+import Data.Array.NonEmpty (NonEmptyArray)
+import Data.Array.NonEmpty (all, head, toArray) as NEA
 import Data.Either (Either)
 import Data.Foldable (maximumBy)
 import Data.Maybe (Maybe(..), fromJust, fromMaybe)
@@ -26,14 +28,14 @@ type MergedStaveLine = Array (Array BarSpec)
 -- | the Monad translation context
 type Translation a = ExceptT String (State EnsembleContext) a
 
-runBuildEnsembleScore :: Array MonophonicScore -> Either String EnsembleScore 
+runBuildEnsembleScore :: NonEmptyArray MonophonicScore -> Either String EnsembleScore 
 runBuildEnsembleScore staveSpecs = 
   unwrap $ evalStateT (runExceptT $ buildEnsembleScore staveSpecs) { nextStaveNo : 0 }
 
-buildEnsembleScore :: Array MonophonicScore -> Translation EnsembleScore 
+buildEnsembleScore :: NonEmptyArray MonophonicScore -> Translation EnsembleScore 
 buildEnsembleScore scores = do 
   _ <- checkCompatibleScores scores
-  traverseWithIndex buildMultiStaveSpec (transpose etioalatedSpecs)  
+  traverseWithIndex buildMultiStaveSpec (transpose $ NEA.toArray etioalatedSpecs)  
   where
   -- remove any final empty bar with stave lines extending to the canvas width
   etioalatedSpecs = map removeStaveExtensions scores
@@ -141,6 +143,7 @@ buildMultiStaveSpec staveLineNo ss = do
 
 -- | generalised Array transpose 
 
+-- get this from Data.Array once it's been integrated
 transpose :: forall a. Array (Array a) -> Array (Array a)
 transpose [] = []
 transpose x = 
@@ -171,7 +174,7 @@ checkCompatibleStaves multiStaveNo staveSpecs =
     first = fromMaybe 0 $ head lengths
 
 -- | check that each voice has the same number of staves
-checkCompatibleScores :: Array MonophonicScore -> Translation (Array MonophonicScore)
+checkCompatibleScores :: NonEmptyArray MonophonicScore -> Translation (NonEmptyArray MonophonicScore)
 checkCompatibleScores scores = 
   if (identicalStaveCount scores) then 
     pure scores 
@@ -180,13 +183,13 @@ checkCompatibleScores scores =
 
   where
 
-  identicalStaveCount :: Array MonophonicScore -> Boolean
+  identicalStaveCount :: NonEmptyArray MonophonicScore -> Boolean
   identicalStaveCount ms = 
-    all (\l -> l == first) lengths
+    NEA.all (\l -> l == first) lengths
 
     where 
     lengths = map (\score -> length score) ms
 
-    first = fromMaybe 0 $ head lengths
+    first = NEA.head lengths
 
    
