@@ -133,7 +133,7 @@ populateBarVoice renderer staves staveNo voiceBar = do
 populateBarVoices :: Renderer -> Array Stave -> Array VoiceBarSpec -> Effect Unit
 populateBarVoices renderer staves voiceBars = do
   voices <- traverseWithIndex (populateBarVoiceNotes staves) voiceBars
-  _<- renderVoices renderer staves voices 
+  _<- formatVoices voices 
   traverseWithIndex_ (populateBarVoiceStructure renderer voices staves) voiceBars
   
 populateBarVoiceNotes :: Array Stave -> Int -> VoiceBarSpec -> Effect Voice
@@ -152,7 +152,7 @@ populateBarVoiceStructure renderer voices staves staveNo voiceBar = do
     voice = unsafePartial $ fromJust $ index voices staveNo
     (MusicSpec musicSpec) = voiceBar.musicSpec
   -- when (not $ null musicSpec.noteSpecs) do
-  addBarStructure renderer voice voiceBar.beamSpecs voiceBar.curves musicSpec
+  addBarStructure renderer stave voice voiceBar.beamSpecs voiceBar.curves musicSpec
 
 
 staveConfig :: Int -> Int -> Positioning -> VoiceBarSpec -> StaveConfig
@@ -182,6 +182,7 @@ foreign import drawStaveConnector :: Renderer -> Array Stave -> Effect Unit
 foreign import renderBarContents :: Renderer -> Stave -> Array BeamSpec -> VexCurves -> MusicSpecContents -> Effect Unit
 -- | make a voice from the notes on one bar of a stave 
 foreign import addBarVoice :: Stave -> MusicSpecContents -> Effect Voice
--- add the bar structure
-foreign import addBarStructure :: Renderer -> Voice -> Array BeamSpec -> VexCurves -> MusicSpecContents -> Effect Unit
-foreign import renderVoices :: Renderer -> Array Stave -> Array Voice -> Effect Unit      
+-- | add the bar structure
+foreign import addBarStructure :: Renderer -> Stave -> Voice -> Array BeamSpec -> VexCurves -> MusicSpecContents -> Effect Unit
+-- | format the voices. seems to be necessary to do this before adding the beams etc.
+foreign import formatVoices :: Array Voice -> Effect Unit      

@@ -44,12 +44,14 @@ var wrapper = function() {
     },
 
     addBarStructure : function (renderer) {
-      return function (voice) {
-        return function (beamSpecs) {
-          return function (vexCurves) {
-            return function (musicSpec) {
-              return function () {
-                return wrapper.makeBarStructure(renderer, voice, beamSpecs, vexCurves, musicSpec);
+      return function (stave) {
+        return function (voice) {
+          return function (beamSpecs) {
+            return function (vexCurves) {
+              return function (musicSpec) {
+                return function () {
+                  return wrapper.makeBarStructure(renderer, stave, voice, beamSpecs, vexCurves, musicSpec);
+                }
               }
             }
           }
@@ -57,17 +59,11 @@ var wrapper = function() {
       }
     },
 
-    renderVoices : function (renderer) {
-      return function (staves) {
-        return function (voices) {
-          return function () {
-            return wrapper.formatAndDrawVoices(renderer, staves, voices);
-          }
-        }
+    formatVoices : function (voices) {
+      return function () {
+        return wrapper.joinAndFormatVoices(voices);
       }
     },
-
-
 
     /* draw the contents of the bar, using auto-beaming for the notes */
     drawBarContents: function (renderer, stave, beamSpecs, vexCurves, musicSpec) {
@@ -113,7 +109,7 @@ var wrapper = function() {
     },
 
 
-    makeBarStructure: function (renderer, voice, beamSpecs, vexCurves, musicSpec) {
+    makeBarStructure: function (renderer, stave, voice, beamSpecs, vexCurves, musicSpec) {
       // console.log("drawBarContents")
       // console.log(musicSpec);
       var context = renderer.getContext();
@@ -124,6 +120,8 @@ var wrapper = function() {
       // console.log(beamSpecs);
       var beams = beamSpecs.map(wrapper.makeBeam (notes));
       var curves = vexCurves.map(wrapper.makeCurve (notes));
+
+      voice.draw(context, stave);
 
       /* Vex.Flow.Formatter.FormatAndDraw(context, stave, notes); */
       ties.forEach(function(t) {t.setContext(context).draw()})
@@ -154,17 +152,12 @@ var wrapper = function() {
       voice.draw(context, stave);
     },
 
-    formatAndDrawVoices: function (renderer, staves, voices) {      
-      var context = renderer.getContext();
+    joinAndFormatVoices: function (voices) {   
 
       // Format and justify the notes
       // new VF.Formatter({ softmaxFactor: 5 }).joinVoices(voices).format(voices).formatToStave(voices, stave);
       // new VF.Formatter({ softmaxFactor: 5 }).joinVoices(voices).format(voices);
-      new VF.Formatter().joinVoices(voices).format(voices);
-      
-      for (let i = 0; i < staves.length; ++i) {
-        voices[i].draw(context, staves[i]);
-        }      
+      new VF.Formatter().joinVoices(voices).format(voices);      
     },
 
 
@@ -309,4 +302,4 @@ export var drawStaveConnector = wrapper.drawStaveConnector;
 export var renderBarContents = wrapper.renderBarContents;
 export var addBarVoice = wrapper.addBarVoice;
 export var addBarStructure = wrapper.addBarStructure;
-export var renderVoices = wrapper.renderVoices;
+export var formatVoices = wrapper.formatVoices;
