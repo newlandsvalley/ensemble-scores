@@ -3,7 +3,7 @@ module Abc.EnsembleScore.Types where
 import Data.Abc (BarLine, KeySignature)
 import Data.Maybe (Maybe)
 import VexFlow.Abc.Slur (VexCurve)
-import VexFlow.Types (BeamSpec, LineThickness, MusicSpec, Tempo, TimeSignature)
+import VexFlow.Types (BarFill, BeamSpec, LineThickness, MusicSpec, Tempo, TimeSignature)
 import VexFlow.Abc.Volta (VexVolta)
 
 -- | Positioning of the stave bar. This is an aspect of a bar common to each voice
@@ -18,7 +18,7 @@ type VoiceBarSpec =
   { startLine :: BarLine                  -- the Left bar line (always present)
   , endLineThickness :: LineThickness     -- right bar line type (default Single)?
   , endLineRepeat :: Boolean              -- does it have an end repeat? important for end repeat markers
-  , isFull :: Boolean                     -- does it have a full complement of notes according to the time signature?
+  , fill :: BarFill                       -- what complement of notes according to the time signature?
   , volta :: Maybe VexVolta
   , timeSignature :: TimeSignature
   , beamSpecs :: Array BeamSpec
