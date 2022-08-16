@@ -61,7 +61,7 @@ var wrapper = function() {
 
     formatVoices : function (voices) {
       return function () {
-        return wrapper.joinAndFormatVoices(voices);
+        return new VF.Formatter().joinVoices(voices).format(voices);
       }
     },
 
@@ -152,16 +152,7 @@ var wrapper = function() {
       voice.draw(context, stave);
     },
 
-    joinAndFormatVoices: function (voices) {   
-
-      // Format and justify the notes
-      // new VF.Formatter({ softmaxFactor: 5 }).joinVoices(voices).format(voices).formatToStave(voices, stave);
-      // new VF.Formatter({ softmaxFactor: 5 }).joinVoices(voices).format(voices);
-      new VF.Formatter().joinVoices(voices).format(voices);      
-    },
-
-
-    // make a stave note (n.b. this can represent a single note or a chord)
+     // make a stave note (n.b. this can represent a single note or a chord)
     makeStaveNote: function (noteSpec) {
       // console.log("makeStaveNote")
       // console.log(noteSpec);
