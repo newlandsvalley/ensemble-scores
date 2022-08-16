@@ -25,3 +25,9 @@ In order for an ensemble score to be produced, there must be more than one voice
 ## To do
 
    * Try to find out what to do to align individual notes within a multi-bar
+
+## Formatting Issues
+
+The problem is this:  we analyse the entire score and generate the data structure required in order to hand it to ```VexFlow```.  In order to right-align the staves, we need to know the width of each multi-bar during the analysis.  However, when we eventually ask VexFlow to render it, it seems as if we need to use the ```FULL``` voice mode and to get VexFlow to estimate each bar width itself if we are going to have any chance of vertically aligning notes properly for any given bar across each of the staves.  This width differs from our estimate and consequently there tends to be a good deal of empty space padding the right-hand side of many of the bars.
+
+And in any case, I prefer the look and feel of the score when we don't attempt this alignment and just use VexFlow's ```SOFT``` voice mode.  Maybe we need to abandon this branch and just accept that we can't achieve vertical alignments of notes across the voices.

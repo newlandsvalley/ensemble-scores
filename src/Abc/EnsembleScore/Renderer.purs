@@ -11,7 +11,7 @@ import Abc.EnsembleScore.Types
 import Data.Abc (AbcTune)
 import Data.Abc.Metadata (getTitle)
 import Data.Abc.Voice (partitionVoices)
-import Data.Array (index, null)
+import Data.Array (head, index, null)
 import Data.Array.NonEmpty (NonEmptyArray, length)
 import Data.Maybe (Maybe(..), fromJust, fromMaybe)
 import Data.String (length) as String
@@ -25,7 +25,7 @@ import VexFlow.Score (Renderer, Stave, createScore, resizeCanvas)
 import VexFlow.Abc.Slur (VexCurves)
 import VexFlow.Abc.Alignment (centeredTitleXPos)
 import VexFlow.ApiBindings (newStave, renderStave, addTempoMarking, addTimeSignature, displayContextChange, processBarBeginRepeat, processBarEndRepeat, processVolta, renderTuneTitle)
-import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, staveSeparation, titleDepth)
+import VexFlow.Types (BarFill(..), BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, staveSeparation, titleDepth)
 
 -- | a stave connector
 foreign import data StaveConnector :: Type
@@ -132,9 +132,20 @@ populateBarVoice renderer staves staveNo voiceBar = do
 
 populateBarVoices :: Renderer -> Array Stave -> Array VoiceBarSpec -> Effect Unit
 populateBarVoices renderer staves voiceBars = do
+  let 
+    firstVoiceBar = unsafePartial $ fromJust $ head voiceBars    
+  when (firstVoiceBar.fill /= Empty) do
+    voices <- traverseWithIndex (populateBarVoiceNotes staves) voiceBars
+    _ <- formatVoices voices 
+    traverseWithIndex_ (populateBarVoiceStructure renderer voices staves) voiceBars
+
+
+  {-}
   voices <- traverseWithIndex (populateBarVoiceNotes staves) voiceBars
-  _<- formatVoices voices 
+  when (firstVoiceBar.fill /= Empty) do
+    formatVoices voices 
   traverseWithIndex_ (populateBarVoiceStructure renderer voices staves) voiceBars
+  -}
   
 populateBarVoiceNotes :: Array Stave -> Int -> VoiceBarSpec -> Effect Voice
 populateBarVoiceNotes staves staveNo voiceBar = do

@@ -61,13 +61,12 @@ var wrapper = function() {
 
     formatVoices : function (voices) {
       return function () {
-        return new VF.Formatter().joinVoices(voices).format(voices);
-        /* we want to do this but can't if we are handed an empty bar
+        // return new VF.Formatter().joinVoices(voices).format(voices);
+        /* we want to do this but can't if we are handed an empty bar */
         let formatter = new VF.Formatter();
         voices.forEach((v) => formatter.joinVoices([v]));
         let width = formatter.preCalculateMinTotalWidth(voices);
         formatter.format(voices, width);
-        */
       }
     },
 
