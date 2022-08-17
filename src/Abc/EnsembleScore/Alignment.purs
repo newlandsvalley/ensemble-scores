@@ -19,12 +19,12 @@ module Abc.EnsembleScore.Alignment
 import Abc.EnsembleScore.Types
 
 import Control.Monad.State (State, evalStateT, get, put)
-import Data.Array (head, length, singleton)
+import Data.Array (singleton)
+import Data.Array.NonEmpty (head, length) as NEA
 import Data.Foldable (foldl, foldM)
 import Data.Int (floor, toNumber)
-import Data.Maybe (Maybe(..), fromJust)
+import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
-import Partial.Unsafe (unsafePartial)
 import Prelude (bind, map, max, mempty, min, pure, ($), (*), (+), (-), (/), (<>), (>=))
 import VexFlow.Types (Config, scoreMarginBottom, staveSeparation, titleDepth)
 
@@ -57,7 +57,7 @@ justifiedScoreConfig score config =
 -- |
 -- | If the widest stave is wider than the maximum stave width (and hence
 -- | truncated) then align to this maximum width.
-alignStaves :: Int -> Number -> Array MultiStaveSpec -> Array MultiStaveSpec
+alignStaves :: Int -> Number -> EnsembleScore -> EnsembleScore
 alignStaves maxCanvasWidth scale multiStaves =
   let
     maxWidth = maxStaveWidth maxCanvasWidth scale
@@ -80,7 +80,7 @@ alignStaves maxCanvasWidth scale multiStaves =
 -- | find the widest stave
 -- | (if any stave is greater than the maximum width then this max is taken as the
 -- | maximum)
-alignmentStaveWidth :: Int -> Array MultiStaveSpec -> Int
+alignmentStaveWidth :: Int -> EnsembleScore -> Int
 alignmentStaveWidth maxWidth mss =
   foldl staveWidthf 0 mss
 
@@ -144,7 +144,7 @@ maxStaveWidth canvasWidth scale =
   floor $ (toNumber canvasWidth) / scale
 
 -- | the canvas width that contains the justified score
-justifiedScoreCanvasWidth :: Number -> Array MultiStaveSpec -> Int
+justifiedScoreCanvasWidth :: Number -> EnsembleScore -> Int
 justifiedScoreCanvasWidth scale staves =
   floor $ (toNumber staveWidth) * scale
   
@@ -152,12 +152,12 @@ justifiedScoreCanvasWidth scale staves =
   staveWidth = (alignmentStaveWidth 10000 staves) + (2 * multiStaveIndentation)
 
 -- | the canvas height that contains the justified score
-justifiedScoreCanvasHeight :: Number -> Boolean -> Array MultiStaveSpec -> Int
+justifiedScoreCanvasHeight :: Number -> Boolean -> EnsembleScore -> Int
 justifiedScoreCanvasHeight scale titled staves =
   let
-    firstStave = unsafePartial $ fromJust $ head staves
-    voiceCount = length firstStave.staveStarts
-    staveCount = length staves * voiceCount
+    firstStave = NEA.head staves
+    voiceCount = NEA.length firstStave.staveStarts
+    staveCount = NEA.length staves * voiceCount
     titleSeparation =
       if titled then titleDepth else 0
     staveHeight = (staveCount * staveSeparation) + scoreMarginBottom + titleSeparation

@@ -11,8 +11,8 @@ import Abc.EnsembleScore.Types
 import Data.Abc (AbcTune)
 import Data.Abc.Metadata (getTitle)
 import Data.Abc.Voice (partitionVoices)
-import Data.Array (head, index, null)
 import Data.Array.NonEmpty (NonEmptyArray, length)
+import Data.Array.NonEmpty (head, index) as NEA
 import Data.Maybe (Maybe(..), fromJust, fromMaybe)
 import Data.String (length) as String
 import Effect (Effect)
@@ -79,11 +79,11 @@ renderMultiStave :: Renderer -> MultiStaveSpec -> Effect Unit
 renderMultiStave renderer mss = do
   renderLine renderer mss.staveStarts mss.multiStaveLine
 
-renderLine :: Renderer -> Array StaveStart -> MultiStaveLine -> Effect Unit
+renderLine :: Renderer -> NonEmptyArray StaveStart -> MultiStaveLine -> Effect Unit
 renderLine renderer staveStarts line = 
   traverseWithIndex_ (renderMultiBar renderer staveStarts) line
 
-renderMultiBar :: Renderer -> Array StaveStart -> Int -> MultiStaveBarSpec -> Effect Unit 
+renderMultiBar :: Renderer -> NonEmptyArray StaveStart -> Int -> MultiStaveBarSpec -> Effect Unit 
 renderMultiBar renderer staveStarts barNo multiBar = do
   staves <- traverseWithIndex 
               (makeStaveBar staveStarts multiBar.positioning barNo) 
@@ -94,10 +94,10 @@ renderMultiBar renderer staveStarts barNo multiBar = do
   _ <- populateBarVoices renderer staves multiBar.voices
   pure unit
 
-makeStaveBar :: Array StaveStart -> Positioning -> Int -> Int  -> VoiceBarSpec -> Effect Stave
+makeStaveBar :: NonEmptyArray StaveStart -> Positioning -> Int -> Int  -> VoiceBarSpec -> Effect Stave
 makeStaveBar staveStarts positioning barNo voiceNo barSpec = do
   let 
-    staveStart = unsafePartial $ fromJust $ index staveStarts voiceNo
+    staveStart = unsafePartial $ fromJust $ NEA.index staveStarts voiceNo
     config = staveConfig staveStart.staveNo barNo positioning barSpec 
     (MusicSpec musicSpec) = barSpec.musicSpec
     -- _ = spy "positioning" positioning
@@ -115,14 +115,14 @@ makeStaveBar staveStarts positioning barNo voiceNo barSpec = do
   pure stave
 
 {-
-populateBarVoices :: Renderer -> Array Stave -> Array VoiceBarSpec -> Effect Unit
+populateBarVoices :: Renderer -> NonEmptyArray Stave -> NonEmptyArray VoiceBarSpec -> Effect Unit
 populateBarVoices renderer staves voiceBars = 
   traverseWithIndex_ (populateBarVoice renderer staves) voiceBars
 
-populateBarVoice :: Renderer -> Array Stave -> Int -> VoiceBarSpec -> Effect Unit
+populateBarVoice :: Renderer -> NonEmptyArray Stave -> Int -> VoiceBarSpec -> Effect Unit
 populateBarVoice renderer staves staveNo voiceBar = do
   let 
-    stave = unsafePartial $ fromJust $ index staves staveNo
+    stave = unsafePartial $ fromJust $ NEA.index staves staveNo
     (MusicSpec musicSpec) = voiceBar.musicSpec
   when (not $ null musicSpec.noteSpecs) do
     renderBarContents renderer stave voiceBar.beamSpecs voiceBar.curves musicSpec
@@ -130,10 +130,10 @@ populateBarVoice renderer staves staveNo voiceBar = do
 -}
 
 
-populateBarVoices :: Renderer -> Array Stave -> Array VoiceBarSpec -> Effect Unit
+populateBarVoices :: Renderer -> NonEmptyArray Stave -> NonEmptyArray VoiceBarSpec -> Effect Unit
 populateBarVoices renderer staves voiceBars = do
   let 
-    firstVoiceBar = unsafePartial $ fromJust $ head voiceBars    
+    firstVoiceBar = NEA.head voiceBars    
   when (firstVoiceBar.fill /= Empty) do
     voices <- traverseWithIndex (populateBarVoiceNotes staves) voiceBars
     _ <- formatVoices voices 
@@ -147,20 +147,20 @@ populateBarVoices renderer staves voiceBars = do
   traverseWithIndex_ (populateBarVoiceStructure renderer voices staves) voiceBars
   -}
   
-populateBarVoiceNotes :: Array Stave -> Int -> VoiceBarSpec -> Effect Voice
+populateBarVoiceNotes :: NonEmptyArray Stave -> Int -> VoiceBarSpec -> Effect Voice
 populateBarVoiceNotes staves staveNo voiceBar = do
   let 
-    stave = unsafePartial $ fromJust $ index staves staveNo
+    stave = unsafePartial $ fromJust $ NEA.index staves staveNo
     (MusicSpec musicSpec) = voiceBar.musicSpec
   -- when (not $ null musicSpec.noteSpecs) do
   addBarVoice stave musicSpec
   
 
-populateBarVoiceStructure :: Renderer -> Array Voice -> Array Stave -> Int -> VoiceBarSpec -> Effect Unit
+populateBarVoiceStructure :: Renderer -> NonEmptyArray Voice -> NonEmptyArray Stave -> Int -> VoiceBarSpec -> Effect Unit
 populateBarVoiceStructure renderer voices staves staveNo voiceBar = do
   let 
-    stave = unsafePartial $ fromJust $ index staves staveNo
-    voice = unsafePartial $ fromJust $ index voices staveNo
+    stave = unsafePartial $ fromJust $ NEA.index staves staveNo
+    voice = unsafePartial $ fromJust $ NEA.index voices staveNo
     (MusicSpec musicSpec) = voiceBar.musicSpec
   -- when (not $ null musicSpec.noteSpecs) do
   addBarStructure renderer stave voice voiceBar.beamSpecs voiceBar.curves musicSpec
@@ -188,7 +188,7 @@ renderTitle config renderer title = do
   renderTuneTitle renderer title xPos yPos
 
 foreign import init :: Effect Unit
-foreign import drawStaveConnector :: Renderer -> Array Stave -> Effect Unit
+foreign import drawStaveConnector :: Renderer -> NonEmptyArray Stave -> Effect Unit
 -- | display all the contents of the bar, using explicit beaming for the notes
 foreign import renderBarContents :: Renderer -> Stave -> Array BeamSpec -> VexCurves -> MusicSpecContents -> Effect Unit
 -- | make a voice from the notes on one bar of a stave 
@@ -196,4 +196,4 @@ foreign import addBarVoice :: Stave -> MusicSpecContents -> Effect Voice
 -- | add the bar structure
 foreign import addBarStructure :: Renderer -> Stave -> Voice -> Array BeamSpec -> VexCurves -> MusicSpecContents -> Effect Unit
 -- | format the voices. seems to be necessary to do this before adding the beams etc.
-foreign import formatVoices :: Array Voice -> Effect Unit      
+foreign import formatVoices :: NonEmptyArray Voice -> Effect Unit      

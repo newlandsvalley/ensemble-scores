@@ -15,7 +15,7 @@ config :: Config
 config =
   defaultConfig 
     { width = 1500
-    , scale = 0.6
+    , scale = 0.7
     }
 
 main :: Effect (Maybe String)
