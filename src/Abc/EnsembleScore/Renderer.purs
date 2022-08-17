@@ -11,7 +11,7 @@ import Abc.EnsembleScore.Types
 import Data.Abc (AbcTune)
 import Data.Abc.Metadata (getTitle)
 import Data.Abc.Voice (partitionVoices)
-import Data.Array (index, null)
+import Data.Array (null)
 import Data.Array.NonEmpty (NonEmptyArray, length)
 import Data.Array.NonEmpty (index) as NEA
 import Data.Maybe (Maybe(..), fromJust, fromMaybe)
@@ -78,11 +78,11 @@ renderMultiStave :: Renderer -> MultiStaveSpec -> Effect Unit
 renderMultiStave renderer mss = do
   renderLine renderer mss.staveStarts mss.multiStaveLine
 
-renderLine :: Renderer -> Array StaveStart -> MultiStaveLine -> Effect Unit
+renderLine :: Renderer -> NonEmptyArray StaveStart -> MultiStaveLine -> Effect Unit
 renderLine renderer staveStarts line = 
   traverseWithIndex_ (renderMultiBar renderer staveStarts) line
 
-renderMultiBar :: Renderer -> Array StaveStart -> Int -> MultiStaveBarSpec -> Effect Unit 
+renderMultiBar :: Renderer -> NonEmptyArray StaveStart -> Int -> MultiStaveBarSpec -> Effect Unit 
 renderMultiBar renderer staveStarts barNo multiBar = do
   staves <- traverseWithIndex 
               (makeStaveBar staveStarts multiBar.positioning barNo) 
@@ -93,10 +93,10 @@ renderMultiBar renderer staveStarts barNo multiBar = do
   _ <- populateBarVoices renderer staves multiBar.voices
   pure unit
 
-makeStaveBar :: Array StaveStart -> Positioning -> Int -> Int  -> VoiceBarSpec -> Effect Stave
+makeStaveBar :: NonEmptyArray StaveStart -> Positioning -> Int -> Int  -> VoiceBarSpec -> Effect Stave
 makeStaveBar staveStarts positioning barNo voiceNo barSpec = do
   let 
-    staveStart = unsafePartial $ fromJust $ index staveStarts voiceNo
+    staveStart = unsafePartial $ fromJust $ NEA.index staveStarts voiceNo
     config = staveConfig staveStart.staveNo barNo positioning barSpec 
     (MusicSpec musicSpec) = barSpec.musicSpec
     -- _ = spy "positioning" positioning

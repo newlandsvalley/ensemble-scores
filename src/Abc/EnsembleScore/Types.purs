@@ -47,11 +47,11 @@ type StaveStart =
 -- a line of a score with multiple staves for each part
 type MultiStaveSpec =
   { staveWidth :: Int
-  , staveStarts :: Array StaveStart
+  , staveStarts :: NonEmptyArray StaveStart
   , multiStaveLine :: MultiStaveLine
   }
 
-type EnsembleScore = Array MultiStaveSpec 
+type EnsembleScore = NonEmptyArray MultiStaveSpec 
 
 type EnsembleContext = 
   { nextStaveNo :: Int }

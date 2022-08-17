@@ -8,9 +8,10 @@ import Prelude
 
 import Control.Monad.Except.Trans (ExceptT, runExceptT, throwError)
 import Control.Monad.State (State, evalStateT, get, put)
-import Data.Array (all, cons, head, foldl, index, last, length, reverse, transpose, zipWith)
-import Data.Array.NonEmpty ((:), NonEmptyArray)
-import Data.Array.NonEmpty (all, head, singleton, toArray) as NEA
+import Data.Array (cons, head, foldl, last, length, reverse, zipWith)
+import Data.Array.NonEmpty ((:))
+import Data.Array.NonEmpty (all, head, index, length, singleton, transpose) as NEA
+import Data.Array.NonEmpty.Internal (NonEmptyArray(..))
 import Data.Either (Either)
 import Data.Foldable (maximumBy)
 import Data.Maybe (Maybe(..), fromJust, fromMaybe)
@@ -35,25 +36,25 @@ runBuildEnsembleScore staveSpecs =
 buildEnsembleScore :: NonEmptyArray MonophonicScore -> Translation EnsembleScore 
 buildEnsembleScore scores = do 
   _ <- checkCompatibleScores scores
-  traverseWithIndex buildMultiStaveSpec (transpose $ NEA.toArray etioalatedSpecs)  
+  traverseWithIndex buildMultiStaveSpec (NEA.transpose etioalatedSpecs)  
   where
   -- remove any final empty bar with stave lines extending to the canvas width
   etioalatedSpecs = map removeStaveExtensions scores
 
-mergeVoiceLines :: Int -> Array StaveSpec -> Translation MergedStaveLine
-mergeVoiceLines staveLineNo [s1, s2] = do
-  _ <- checkCompatibleStaves staveLineNo [s1, s2]
+mergeVoiceLines :: Int -> NonEmptyArray StaveSpec -> Translation MergedStaveLine
+mergeVoiceLines staveLineNo arr@(NonEmptyArray [s1, s2]) = do
+  _ <- checkCompatibleStaves staveLineNo arr
   pure $ merge2VoiceLines s1.barSpecs s2.barSpecs
-mergeVoiceLines staveLineNo [s1, s2, s3] = do
-  _ <- checkCompatibleStaves staveLineNo [s1, s2, s3]
+mergeVoiceLines staveLineNo arr@(NonEmptyArray [s1, s2, s3]) = do
+  _ <- checkCompatibleStaves staveLineNo arr
   pure $ mergeFurtherVoiceLine s1.barSpecs (merge2VoiceLines s2.barSpecs s3.barSpecs)
-mergeVoiceLines staveLineNo [s1, s2, s3, s4] = do
-  _ <- checkCompatibleStaves staveLineNo [s1, s2, s3, s4]
+mergeVoiceLines staveLineNo arr@(NonEmptyArray [s1, s2, s3, s4]) = do
+  _ <- checkCompatibleStaves staveLineNo arr
   pure $ mergeFurtherVoiceLine s1.barSpecs (mergeFurtherVoiceLine s2.barSpecs
     (merge2VoiceLines s3.barSpecs s4.barSpecs))
 mergeVoiceLines _staveLineNo x =
   throwError ("This module only supports polyphony with between 2 and 4 voices - we got: "
-                <> (show $ length x))
+                <> (show $ NEA.length x))
 
 merge2VoiceLines :: Array BarSpec -> Array BarSpec -> MergedStaveLine
 merge2VoiceLines  a1 a2 = 
@@ -117,7 +118,7 @@ calculateStaveLineWidth multiStaveLine =
       msBarSpec.positioning.width + msBarSpec.positioning.xOffset
 
 -- build a complete multi-stave spec
-buildMultiStaveSpec :: Int -> Array StaveSpec -> Translation MultiStaveSpec
+buildMultiStaveSpec :: Int -> NonEmptyArray StaveSpec -> Translation MultiStaveSpec
 buildMultiStaveSpec staveLineNo ss = do
   mergedVoiceLines <- mergeVoiceLines staveLineNo ss
   let 
@@ -139,10 +140,10 @@ buildMultiStaveSpec staveLineNo ss = do
             , clefString : s.clefString
             }  
 
-    firstVoiceStaveSpec = unsafePartial $ fromJust $ index ss 0
+    firstVoiceStaveSpec = unsafePartial $ fromJust $ NEA.index ss 0
 
 -- | check that each stave across all voices has an identical number of bars
-checkCompatibleStaves :: Int -> Array StaveSpec -> Translation (Array StaveSpec)
+checkCompatibleStaves :: Int -> NonEmptyArray StaveSpec -> Translation (NonEmptyArray StaveSpec)
 checkCompatibleStaves multiStaveNo staveSpecs = 
   if (identicalBarNumbers staveSpecs) then 
     pure staveSpecs 
@@ -152,14 +153,15 @@ checkCompatibleStaves multiStaveNo staveSpecs =
   where
 
   -- | check that all the bars of a given stave line are of the same length
-  identicalBarNumbers :: Array StaveSpec -> Boolean
+  identicalBarNumbers :: NonEmptyArray StaveSpec -> Boolean
   identicalBarNumbers sss = 
-    all (\l -> l == first) lengths
+    NEA.all (\l -> l == first) lengths
 
     where 
+    lengths :: NonEmptyArray Int
     lengths = map (\ss -> length ss.barSpecs) sss
 
-    first = fromMaybe 0 $ head lengths
+    first = NEA.head lengths
 
 -- | check that each voice has the same number of staves
 checkCompatibleScores :: NonEmptyArray MonophonicScore -> Translation (NonEmptyArray MonophonicScore)
@@ -176,7 +178,7 @@ checkCompatibleScores scores =
     NEA.all (\l -> l == first) lengths
 
     where 
-    lengths = map (\score -> length score) ms
+    lengths = map (\score -> NEA.length score) ms
 
     first = NEA.head lengths
 
