@@ -8,9 +8,9 @@ import Prelude
 
 import Control.Monad.Except.Trans (ExceptT, runExceptT, throwError)
 import Control.Monad.State (State, evalStateT, get, put)
-import Data.Array ((:), all, head, foldl, index, last, length, mapMaybe, reverse, singleton, tail, zipWith)
-import Data.Array.NonEmpty (NonEmptyArray)
-import Data.Array.NonEmpty (all, head, toArray) as NEA
+import Data.Array (all, cons, head, foldl, index, last, length, mapMaybe, reverse, tail, zipWith)
+import Data.Array.NonEmpty ((:), NonEmptyArray)
+import Data.Array.NonEmpty (all, head, singleton, toArray) as NEA
 import Data.Either (Either)
 import Data.Foldable (maximumBy)
 import Data.Maybe (Maybe(..), fromJust, fromMaybe)
@@ -23,7 +23,7 @@ import VexFlow.Types (BarSpec, MonophonicScore, StaveSpec)
 
 -- Associate all the voices of an individual bar of music 
 -- and then provide a line of these that represent one stave line of associated bars
-type MergedStaveLine = Array (Array BarSpec)
+type MergedStaveLine = Array (NonEmptyArray BarSpec)
 
 -- | the Monad translation context
 type Translation a = ExceptT String (State EnsembleContext) a
@@ -57,7 +57,7 @@ mergeVoiceLines _staveLineNo x =
 
 merge2VoiceLines :: Array BarSpec -> Array BarSpec -> MergedStaveLine
 merge2VoiceLines  a1 a2 = 
-    zipWith (\x y -> x : (singleton y)) a1 a2
+    zipWith (\x y -> x : (NEA.singleton y)) a1 a2
 
 mergeFurtherVoiceLine :: Array BarSpec -> MergedStaveLine -> MergedStaveLine
 mergeFurtherVoiceLine  a2 a3 = 
@@ -66,7 +66,7 @@ mergeFurtherVoiceLine  a2 a3 =
 -- build a multi-stave bar spec from an array of individual bar specs
 -- i.e. the positioning of the multi stave bar must be constant across all the voices
 -- so choose the maximum width and we'll need to keep a running total of the xOffset
-buildMultiStaveBarSpec :: Int -> Array BarSpec -> MultiStaveBarSpec
+buildMultiStaveBarSpec :: Int -> NonEmptyArray BarSpec -> MultiStaveBarSpec
 buildMultiStaveBarSpec xOffset multiBars = 
   let 
     width :: Int
@@ -96,7 +96,7 @@ buildMultiStaveLine mergedStaveLine =
   reverse $ foldl f [] mergedStaveLine
 
   where 
-  f :: MultiStaveLine -> Array BarSpec -> MultiStaveLine
+  f :: MultiStaveLine -> NonEmptyArray BarSpec -> MultiStaveLine
   f acc barSpecs = 
     let  
       nextXOffset = 
@@ -106,7 +106,7 @@ buildMultiStaveLine mergedStaveLine =
           Just bs ->
             bs.positioning.width + bs.positioning.xOffset 
     in 
-      (buildMultiStaveBarSpec nextXOffset barSpecs) : acc      
+      cons (buildMultiStaveBarSpec nextXOffset barSpecs) acc      
 
 calculateStaveLineWidth :: MultiStaveLine -> Int 
 calculateStaveLineWidth multiStaveLine = 
@@ -151,7 +151,7 @@ transpose x =
     [] -> 
       transpose (mapMaybe tail x)
     start ->       
-      start : transpose (mapMaybe tail x)      
+      cons start (transpose (mapMaybe tail x))     
 
 -- | check that each stave across all voices has an identical number of bars
 checkCompatibleStaves :: Int -> Array StaveSpec -> Translation (Array StaveSpec)

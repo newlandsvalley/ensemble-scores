@@ -1,5 +1,6 @@
 module Abc.EnsembleScore.Types where
 
+import Data.Array.NonEmpty (NonEmptyArray)
 import Data.Abc (BarLine, KeySignature)
 import Data.Maybe (Maybe)
 import VexFlow.Abc.Slur (VexCurve)
@@ -29,7 +30,7 @@ type VoiceBarSpec =
 -- | a single bar spanning all voices
 type MultiStaveBarSpec = 
   { positioning :: Positioning
-  , voices :: Array VoiceBarSpec 
+  , voices :: NonEmptyArray VoiceBarSpec 
   }
 
 -- | a line of such bar specs

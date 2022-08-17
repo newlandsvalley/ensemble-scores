@@ -13,6 +13,7 @@ import Data.Abc.Metadata (getTitle)
 import Data.Abc.Voice (partitionVoices)
 import Data.Array (index, null)
 import Data.Array.NonEmpty (NonEmptyArray, length)
+import Data.Array.NonEmpty (index) as NEA
 import Data.Maybe (Maybe(..), fromJust, fromMaybe)
 import Data.String (length) as String
 import Effect (Effect)
@@ -112,14 +113,14 @@ makeStaveBar staveStarts positioning barNo voiceNo barSpec = do
   _ <- processVolta stave barSpec.volta
   pure stave
 
-populateBarVoices :: Renderer -> Array Stave -> Array VoiceBarSpec -> Effect Unit
+populateBarVoices :: Renderer -> NonEmptyArray Stave -> NonEmptyArray VoiceBarSpec -> Effect Unit
 populateBarVoices renderer staves voiceBars = 
   traverseWithIndex_ (populateBarVoice renderer staves) voiceBars
 
-populateBarVoice :: Renderer -> Array Stave -> Int -> VoiceBarSpec -> Effect Unit
+populateBarVoice :: Renderer -> NonEmptyArray Stave -> Int -> VoiceBarSpec -> Effect Unit
 populateBarVoice renderer staves staveNo voiceBar = do
   let 
-    stave = unsafePartial $ fromJust $ index staves staveNo
+    stave = unsafePartial $ fromJust $ NEA.index staves staveNo
     (MusicSpec musicSpec) = voiceBar.musicSpec
   when (not $ null musicSpec.noteSpecs) do
     renderBarContents renderer stave voiceBar.beamSpecs voiceBar.curves musicSpec
@@ -147,7 +148,7 @@ renderTitle config renderer title = do
   renderTuneTitle renderer title xPos yPos
 
 foreign import init :: Effect Unit
-foreign import drawStaveConnector :: Renderer -> Array Stave -> Effect Unit
+foreign import drawStaveConnector :: Renderer -> NonEmptyArray Stave -> Effect Unit
 -- | display all the contents of the bar, using explicit beaming for the notes
 foreign import renderBarContents :: Renderer -> Stave -> Array BeamSpec -> VexCurves -> MusicSpecContents -> Effect Unit
 
