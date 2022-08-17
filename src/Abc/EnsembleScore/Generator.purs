@@ -8,7 +8,7 @@ import Prelude
 
 import Control.Monad.Except.Trans (ExceptT, runExceptT, throwError)
 import Control.Monad.State (State, evalStateT, get, put)
-import Data.Array (all, cons, head, foldl, index, last, length, mapMaybe, reverse, tail, zipWith)
+import Data.Array (all, cons, head, foldl, index, last, length, reverse, transpose, zipWith)
 import Data.Array.NonEmpty ((:), NonEmptyArray)
 import Data.Array.NonEmpty (all, head, singleton, toArray) as NEA
 import Data.Either (Either)
@@ -140,18 +140,6 @@ buildMultiStaveSpec staveLineNo ss = do
             }  
 
     firstVoiceStaveSpec = unsafePartial $ fromJust $ index ss 0
-
--- | generalised Array transpose 
-
--- get this from Data.Array once it's been integrated
-transpose :: forall a. Array (Array a) -> Array (Array a)
-transpose [] = []
-transpose x = 
-  case (mapMaybe head x) of 
-    [] -> 
-      transpose (mapMaybe tail x)
-    start ->       
-      cons start (transpose (mapMaybe tail x))     
 
 -- | check that each stave across all voices has an identical number of bars
 checkCompatibleStaves :: Int -> Array StaveSpec -> Translation (Array StaveSpec)

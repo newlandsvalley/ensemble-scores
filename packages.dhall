@@ -157,3 +157,22 @@ in  upstream
     , repo = "https://github.com/newlandsvalley/purescript-abc-scores.git"
     , version = "ps015"
     }
+  with arrays =
+    { dependencies =
+    [ "bifunctors"
+    , "control"
+    , "foldable-traversable"
+    , "maybe"
+    , "nonempty"
+    , "partial"
+    , "prelude"
+    , "safe-coerce"
+    , "st"
+    , "tailrec"
+    , "tuples"
+    , "unfoldable"
+    , "unsafe-coerce"
+    ]
+    , repo = "https://github.com/purescript/purescript-arrays.git"
+    , version = "v7.1.0"
+    }
