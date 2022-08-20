@@ -1,10 +1,10 @@
 module Abc.EnsembleScore.Types where
 
 import Data.Array.NonEmpty (NonEmptyArray)
-import Data.Abc (BarLine, KeySignature)
+import Data.Abc (BarLine, KeySignature, TimeSignature)
 import Data.Maybe (Maybe)
 import VexFlow.Abc.Slur (VexCurve)
-import VexFlow.Types (BarFill, BeamSpec, LineThickness, MusicSpec, Tempo, TimeSignature)
+import VexFlow.Types (BarFill, BeamSpec, LineThickness, MusicSpec, Tempo)
 import VexFlow.Abc.Volta (VexVolta)
 
 -- | Positioning of the stave bar. This is an aspect of a bar common to each voice
