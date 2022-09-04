@@ -9,7 +9,7 @@ import Abc.EnsembleScore.Generator (runBuildEnsembleScore)
 import Abc.EnsembleScore.Alignment (rightJustify, justifiedScoreConfig)
 import Abc.EnsembleScore.Types 
 import Data.Abc (AbcTune)
-import Data.Abc.Metadata (getTitle)
+import Data.Abc.Utils (getTitle)
 import Data.Abc.Voice (partitionVoices)
 import Data.Array.NonEmpty (NonEmptyArray, length)
 import Data.Array.NonEmpty (head, index) as NEA
