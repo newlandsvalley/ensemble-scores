@@ -17,6 +17,7 @@ import Data.Array.NonEmpty (index) as NEA
 import Data.Maybe (Maybe(..), fromJust, fromMaybe)
 import Data.String (length) as String
 import Effect (Effect)
+import Effect.Uncurried (EffectFn2, EffectFn5, runEffectFn2, runEffectFn5)
 import Data.Either (Either(..))
 import Data.Traversable (sequenceDefault, traverse, traverse_)
 import Data.TraversableWithIndex (traverseWithIndex)
@@ -147,9 +148,18 @@ renderTitle config renderer title = do
     xPos = centeredTitleXPos config (String.length title)
   renderTuneTitle renderer title xPos yPos
 
+-- | initialise VexFlow
 foreign import init :: Effect Unit
-foreign import drawStaveConnector :: Renderer -> NonEmptyArray Stave -> Effect Unit
+drawStaveConnector :: Renderer -> NonEmptyArray Stave -> Effect Unit
+drawStaveConnector = runEffectFn2 drawStaveConnectorImpl
+
+-- | draw a connector that connects the staves of the various voices
+foreign import drawStaveConnectorImpl :: EffectFn2 Renderer (NonEmptyArray Stave) Unit
+
 -- | display all the contents of the bar, using explicit beaming for the notes
-foreign import renderBarContents :: Renderer -> Stave -> Array BeamSpec -> VexCurves -> MusicSpecContents -> Effect Unit
+renderBarContents :: Renderer -> Stave -> Array BeamSpec -> VexCurves -> MusicSpecContents -> Effect Unit
+renderBarContents = runEffectFn5 renderBarContentsImpl
+
+foreign import renderBarContentsImpl :: EffectFn5 Renderer Stave (Array BeamSpec) VexCurves MusicSpecContents Unit
 
         

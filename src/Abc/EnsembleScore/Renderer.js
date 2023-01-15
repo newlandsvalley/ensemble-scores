@@ -11,32 +11,14 @@ var wrapper = function() {
       VF = Vex.Flow;    
     },
 
-    drawStaveConnector : function (renderer) {
-      return function (staves) {
-        return function () {
-          // console.log("drawStaveConnector staves", staves.length);
-          var context = renderer.getContext();
-          new VF.StaveConnector(staves[0], staves[(staves.length - 1)]).setType('brace').setContext(context).draw();
-        }
-      }
-    },
-    
-    renderBarContents : function (renderer) {
-      return function (stave) {
-        return function (beamSpecs) {
-          return function (vexCurves) {
-            return function (musicSpec) {
-              return function () {
-                return wrapper.drawBarContents(renderer, stave, beamSpecs, vexCurves, musicSpec);
-              }
-            }
-          }
-        }
-      }
+    drawStaveConnector : function (renderer, staves) {
+      // console.log("drawStaveConnector staves", staves.length);
+      var context = renderer.getContext();
+      new VF.StaveConnector(staves[0], staves[(staves.length - 1)]).setType('brace').setContext(context).draw();
     },
 
-    /* draw the contents of the bar, using auto-beaming for the notes */
-    drawBarContents: function (renderer, stave, beamSpecs, vexCurves, musicSpec) {
+    /* draw the contents of the bar, using explicit beaming for the notes */
+    renderBarContents: function (renderer, stave, beamSpecs, vexCurves, musicSpec) {
       // console.log("drawBarContents")
       // console.log(musicSpec);
       var context = renderer.getContext();
@@ -220,5 +202,5 @@ var wrapper = function() {
 
 
 export var init = wrapper.init;
-export var drawStaveConnector = wrapper.drawStaveConnector;
-export var renderBarContents = wrapper.renderBarContents;
+export var drawStaveConnectorImpl = wrapper.drawStaveConnector;
+export var renderBarContentsImpl = wrapper.renderBarContents;
