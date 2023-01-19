@@ -9,13 +9,11 @@ import Abc.EnsembleScore.Generator (runBuildEnsembleScore)
 import Abc.EnsembleScore.Alignment (rightJustify, justifiedScoreConfig)
 import Abc.EnsembleScore.Types 
 import Data.Abc (AbcTune)
-import Data.Abc.Utils (getTitle)
 import Data.Abc.Voice (partitionVoices)
 import Data.Array (null)
 import Data.Array.NonEmpty (NonEmptyArray, length)
 import Data.Array.NonEmpty (index) as NEA
-import Data.Maybe (Maybe(..), fromJust, fromMaybe)
-import Data.String (length) as String
+import Data.Maybe (Maybe(..), fromJust)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn2, EffectFn5, runEffectFn2, runEffectFn5)
 import Data.Either (Either(..))
@@ -23,11 +21,11 @@ import Data.Traversable (sequenceDefault, traverse, traverse_)
 import Data.TraversableWithIndex (traverseWithIndex)
 import Data.FoldableWithIndex (traverseWithIndex_)
 import Partial.Unsafe (unsafePartial)
-import VexFlow.Score (Renderer, Stave, createScore, resizeCanvas)
+import VexFlow.Score (Renderer, Stave, createScore, resizeCanvas, renderTitle, renderComposerAndOrigin)
 import VexFlow.Abc.Slur (VexCurves)
-import VexFlow.Abc.Alignment (centeredTitleXPos)
-import VexFlow.ApiBindings (newStave, renderStave, addTempoMarking, addTimeSignature, displayContextChange, processBarBeginRepeat, processBarEndRepeat, processVolta, renderTuneTitle)
+import VexFlow.ApiBindings (newStave, renderStave, addTempoMarking, addTimeSignature, displayContextChange, processBarBeginRepeat, processBarEndRepeat, processVolta)
 import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, staveSeparation, titleDepth)
+
 
 -- | a stave connector
 foreign import data StaveConnector :: Type
@@ -38,12 +36,11 @@ renderPolyphonicTune :: Config -> Renderer -> AbcTune -> Effect (Maybe String)
 renderPolyphonicTune config renderer tune = do
   let 
     voices = partitionVoices tune 
-    title = fromMaybe "untitled" $ getTitle tune
-  renderPolyphonicVoices config renderer title voices
+  renderPolyphonicVoices config renderer tune voices
 
 -- | render a polyphonic tune as an ensemble score presented as an array of voices
-renderPolyphonicVoices :: Config -> Renderer -> String -> NonEmptyArray AbcTune -> Effect (Maybe String)
-renderPolyphonicVoices config renderer title voices = do
+renderPolyphonicVoices :: Config -> Renderer -> AbcTune -> NonEmptyArray AbcTune -> Effect (Maybe String)
+renderPolyphonicVoices config renderer tune voices = do
   if (length voices <= 1) then     
     pure (Just "There are not multiple voicea in the tune")
   else 
@@ -62,7 +59,9 @@ renderPolyphonicVoices config renderer title voices = do
                  config' = justifiedScoreConfig score config
               _ <- resizeCanvas renderer config'
               _ <- init
-              _ <- renderTitle config' renderer title
+              _ <- renderTitle config' renderer tune
+              -- render the composer and/or the origin if present in the headers
+              _ <- renderComposerAndOrigin config' renderer tune
               _ <- renderScore renderer score                     
               pure Nothing
             Left e -> 
@@ -138,16 +137,6 @@ staveConfig staveNo barNo positioning barSpec =
   , hasDoubleRightBar: (barSpec.endLineThickness == Double)
   }  
 
-renderTitle :: Config -> Renderer -> String -> Effect Unit
-renderTitle config renderer title = do
-  let
-    yPos :: Int
-    yPos = div (titleDepth * 3) 4
-
-    xPos :: Int
-    xPos = centeredTitleXPos config (String.length title)
-  renderTuneTitle renderer title xPos yPos
-
 -- | initialise VexFlow
 foreign import init :: Effect Unit
 drawStaveConnector :: Renderer -> NonEmptyArray Stave -> Effect Unit
@@ -162,4 +151,3 @@ renderBarContents = runEffectFn5 renderBarContentsImpl
 
 foreign import renderBarContentsImpl :: EffectFn5 Renderer Stave (Array BeamSpec) VexCurves MusicSpecContents Unit
 
-        
