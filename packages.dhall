@@ -126,5 +126,5 @@ in  upstream
       , "unfoldable"
       ]
     , repo = "https://github.com/newlandsvalley/purescript-abc-scores.git"
-    , version = "d4179f7ceb6dd634011572acd7c61bda5567831b"
+    , version = "v0.6.3"
     }

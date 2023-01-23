@@ -24,7 +24,7 @@ import Partial.Unsafe (unsafePartial)
 import VexFlow.Score (Renderer, Stave, createScore, resizeCanvas, renderTitle, renderComposerAndOrigin)
 import VexFlow.Abc.Slur (VexCurves)
 import VexFlow.ApiBindings (newStave, renderStave, addTempoMarking, addTimeSignature, displayContextChange, processBarBeginRepeat, processBarEndRepeat, processVolta)
-import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, scoreMarginRight, staveSeparation, titleDepth)
+import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, Titling(..), scoreMarginRight, staveSeparation, titleDepth)
 
 -- | a stave connector
 foreign import data StaveConnector :: Type
@@ -60,7 +60,8 @@ renderPolyphonicVoices config renderer tune voices = do
               _ <- init
               _ <- renderTitle config' renderer tune
               -- render the composer and/or the origin if present in the headers
-              _ <- renderComposerAndOrigin config' renderer tune scoreMarginRight
+              when (config.titling == TitlePlusOrigin) do
+                renderComposerAndOrigin config' renderer tune scoreMarginRight
               _ <- renderScore renderer score                     
               pure Nothing
             Left e -> 

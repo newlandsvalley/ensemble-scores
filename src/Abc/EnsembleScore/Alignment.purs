@@ -26,7 +26,7 @@ import Data.Int (floor, toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Prelude (bind, map, max, mempty, min, pure, ($), (*), (+), (-), (/), (<>), (>=))
-import VexFlow.Types (Config, scoreMarginBottom, staveSeparation, titleDepth)
+import VexFlow.Types (Config, Titling(..), scoreMarginBottom, staveSeparation, titleDepth)
 
 type Alignment a = State Int a
 
@@ -45,7 +45,7 @@ justifiedScoreConfig score config =
 
     justifiedScoreHeight :: Int
     justifiedScoreHeight =
-      justifiedScoreCanvasHeight config.scale config.titled score
+      justifiedScoreCanvasHeight config.scale config.titling score
   in
     config
       { width = justifiedScoreWidth
@@ -152,14 +152,15 @@ justifiedScoreCanvasWidth scale staves =
   staveWidth = (alignmentStaveWidth 10000 staves) + (2 * multiStaveIndentation)
 
 -- | the canvas height that contains the justified score
-justifiedScoreCanvasHeight :: Number -> Boolean -> EnsembleScore -> Int
-justifiedScoreCanvasHeight scale titled staves =
+justifiedScoreCanvasHeight :: Number -> Titling -> EnsembleScore -> Int
+justifiedScoreCanvasHeight scale titling staves =
   let
     firstStave = NEA.head staves
     voiceCount = NEA.length firstStave.staveStarts
     staveCount = NEA.length staves * voiceCount
-    titleSeparation =
-      if titled then titleDepth else 0
+    titleSeparation = case titling of 
+      NoTitle -> 0 
+      _ -> titleDepth
     staveHeight = (staveCount * staveSeparation) + scoreMarginBottom + titleSeparation
   in
     floor $ (toNumber staveHeight) * scale

@@ -111,7 +111,7 @@ carstedt =
  <> "M: 4/4\r\n"
  <> "L: 1/16\r\n"
  <> "Q: 1/4=70\r\n"
- <> "O: Barsele, Lappland and very many other places as well\r\n"
+ <> "O: Barsele, Lappland\r\n"
  <> "K: Gm\r\n"
  <> "V:1\r\n"
  <> "D | G>^FGA y B>AFG  AB/A/G>F y G>ABc | d>^cd=e y fecd ef/e/d>c y d>=cBA |\r\n"
