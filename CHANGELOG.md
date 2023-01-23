@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-v0.1.2 (2023-01-23)
+v0.1.3 (2023-01-23)
 -------------------
 
   * Add composer and origin (where present).
