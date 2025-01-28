@@ -1,0 +1,10 @@
+package:
+  name: example
+  dependencies:
+    - aff
+    - console
+    - effect
+    - ensemble-scores
+    - abc-scores
+    - abc-parser
+    - debug
