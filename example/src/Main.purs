@@ -6,7 +6,7 @@ import Data.Maybe (Maybe(..))
 import Data.Either (Either(..))
 import Effect (Effect)
 import VexFlow.Score (initialiseCanvas)
-import VexFlow.Types (Config, defaultConfig)
+import VexFlow.Types (Config, RenderingError, defaultConfig)
 import Data.Abc.Parser (parse)
 import Abc.EnsembleScore.Renderer
 import Debug (spy)
@@ -18,7 +18,7 @@ config =
     , scale = 0.8
     }
 
-main :: Effect (Maybe String)
+main :: Effect (Either RenderingError Config)
 main =
   case (parse carstedt) of
     Right abcTune -> do
@@ -31,7 +31,7 @@ main =
     Left e -> do 
       let 
         _ = spy "parse error" e
-      pure $ Just "ABC failed to parse"
+      pure $ Left "ABC failed to parse"
 
 oneBar :: String 
 oneBar = 

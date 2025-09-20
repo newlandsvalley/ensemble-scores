@@ -13,7 +13,7 @@ import Data.Abc.Voice (partitionVoices)
 import Data.Array (null)
 import Data.Array.NonEmpty (NonEmptyArray, length)
 import Data.Array.NonEmpty (index) as NEA
-import Data.Maybe (Maybe(..), fromJust)
+import Data.Maybe (fromJust)
 import Effect (Effect)
 import Effect.Uncurried (EffectFn2, EffectFn5, runEffectFn2, runEffectFn5)
 import Data.Either (Either(..))
@@ -24,24 +24,24 @@ import Partial.Unsafe (unsafePartial)
 import VexFlow.Score (Renderer, Stave, createScore, resizeCanvas, renderTitle, renderComposerAndOrigin)
 import VexFlow.Abc.Slur (VexCurves)
 import VexFlow.ApiBindings (newStave, renderStave, addTempoMarking, addTimeSignature, displayContextChange, processBarBeginRepeat, processBarEndRepeat, processVolta)
-import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, StaveConfig, Titling(..), scoreMarginRight, staveSeparation, titleDepth)
+import VexFlow.Types (BeamSpec, Config, LineThickness(..), MonophonicScore, MusicSpec(..), MusicSpecContents, RenderingError, StaveConfig, Titling(..), scoreMarginRight, staveSeparation, titleDepth)
 
 -- | a stave connector
 foreign import data StaveConnector :: Type
 
 -- | render a polyphonic tune as an ensemble score where the tune contains 
 -- | separate voice parts
-renderPolyphonicTune :: Config -> Renderer -> AbcTune -> Effect (Maybe String)
+renderPolyphonicTune :: Config -> Renderer -> AbcTune -> Effect (Either RenderingError Config)
 renderPolyphonicTune config renderer tune = do
   let 
     voices = partitionVoices tune 
   renderPolyphonicVoices config renderer tune voices
 
 -- | render a polyphonic tune as an ensemble score presented as an array of voices
-renderPolyphonicVoices :: Config -> Renderer -> AbcTune -> NonEmptyArray AbcTune -> Effect (Maybe String)
+renderPolyphonicVoices :: Config -> Renderer -> AbcTune -> NonEmptyArray AbcTune -> Effect (Either RenderingError Config)
 renderPolyphonicVoices config renderer tune voices = do
   if (length voices <= 1) then     
-    pure (Just "There are not multiple voicea in the tune")
+    pure (Left "There are not multiple voicea in the tune")
   else 
     let 
       eVoiceScores :: Either String (NonEmptyArray MonophonicScore)
@@ -63,12 +63,12 @@ renderPolyphonicVoices config renderer tune voices = do
               when (config.titling == TitlePlusOrigin) do
                 renderComposerAndOrigin config' renderer tune scoreMarginRight
               _ <- renderScore renderer score                     
-              pure Nothing
+              pure $ Right config'
             Left e -> 
-              pure (Just e)
+              pure $ Left e
 
         Left e -> 
-          pure (Just e)
+          pure $ Left e
 
 renderScore :: Renderer -> EnsembleScore -> Effect Unit 
 renderScore renderer score = do
